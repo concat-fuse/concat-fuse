@@ -18,6 +18,7 @@
 
 #define _GNU_SOURCE
 
+#include <assert.h>
 #include <ctype.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -41,10 +42,22 @@ orig_fxstat_t orig_fxstat;
 orig_lseek_t orig_lseek;
 orig_read_t orig_read;
 
+typedef FILE* (*orig_fopen_t)(const char* pathname, const char* mode);
+typedef int (*orig_fflush_t)(FILE* fd);
+typedef int (*orig_fclose_t)(FILE* fd);
+typedef size_t (*orig_fread_t)(void *ptr, size_t size, size_t nmemb, FILE *stream);
+typedef size_t (*orig_fwrite_t)(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+
+orig_fopen_t orig_fopen;
+orig_fflush_t orig_fflush;
+orig_fclose_t orig_fclose;
+orig_fread_t orig_fread;
+orig_fwrite_t orig_fwrite;
+
 #define CONCAT_MAGIC_FD INT_MAX
 
-//#define log_debug(...) fprintf(stderr, __VA_ARGS__)
-#define log_debug(...)
+#define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
+//#define log_debug(...)
 
 typedef struct
 {
@@ -116,13 +129,19 @@ void collect_file_info()
 __attribute__ ((constructor))
 void init()
 {
-  log_debug("== init()\n");
+  log_debug("init()\n");
 
   orig_open = (orig_open_t)dlsym(RTLD_NEXT, "open");
   orig_lseek = (orig_lseek_t)dlsym(RTLD_NEXT, "lseek");
   orig_read = (orig_read_t)dlsym(RTLD_NEXT, "read");
   orig_close = (orig_close_t)dlsym(RTLD_NEXT, "close");
   orig_fxstat = (orig_fxstat_t)dlsym(RTLD_NEXT, "__fxstat");
+
+  orig_fopen = (orig_fopen_t)dlsym(RTLD_NEXT, "fopen");
+  orig_fclose = (orig_fclose_t)dlsym(RTLD_NEXT, "fclose");
+  orig_fread = (orig_fread_t)dlsym(RTLD_NEXT, "fread");
+  orig_fwrite = (orig_fwrite_t)dlsym(RTLD_NEXT, "fwrite");
+  orig_fflush = (orig_fflush_t)dlsym(RTLD_NEXT, "fflush");
 
   collect_file_info();
 }
@@ -161,7 +180,7 @@ void read_subfile(const char* filename, size_t offset, void* buf, size_t count)
 
 ssize_t magicfile_read(size_t pos, void* buf, size_t count)
 {
-  log_debug("== magicfile_read(%zu, %p, %zu)\n", pos, buf, count);
+  log_debug("magicfile_read(%zu, %p, %zu)\n", pos, buf, count);
 
   size_t total_count = 0;
   while(count != 0)
@@ -171,7 +190,7 @@ ssize_t magicfile_read(size_t pos, void* buf, size_t count)
     log_debug("found file: %zu %d %zu %zu\n", pos, idx, offset, count);
     if (idx < 0)
     {
-      log_debug("== EOF reached\n");
+      log_debug("EOF reached\n");
       return total_count;
     }
     else
@@ -199,20 +218,20 @@ int open(const char* pathname, int flags, ...)
       strcmp(pathname, "/CONCAT_MAGICFILE") == 0)
   {
     magicfile_pos = 0;
-    log_debug("== magicopen(\"%s\", %d) -> %d\n", pathname, flags, 0);
+    log_debug("magicopen(\"%s\", %d) -> %d\n", pathname, flags, 0);
     return CONCAT_MAGIC_FD;
   }
   else
   {
     int ret = orig_open(pathname, flags);
-    log_debug("== open(\"%s\", %d) -> %d\n", pathname, flags, ret);
+    log_debug("open(\"%s\", %d) -> %d\n", pathname, flags, ret);
     return ret;
   }
 }
 
 off_t lseek(int fd, off_t offset, int whence)
 {
-  log_debug("== lseek(%d, %d, %d)\n", fd, (int)offset, whence);
+  log_debug("lseek(%d, %d, %d)\n", fd, (int)offset, whence);
 
   if (fd == CONCAT_MAGIC_FD)
   {
@@ -241,14 +260,14 @@ off_t lseek(int fd, off_t offset, int whence)
 
 ssize_t read(int fd, void* buf, size_t count)
 {
-  log_debug("== read(%d, %p, %zu)\n", fd, buf, count);
+  log_debug("read(%d, %p, %zu)\n", fd, buf, count);
 
   if (fd == CONCAT_MAGIC_FD)
   {
     ssize_t ret = magicfile_read(magicfile_pos, buf, count);
     if (ret < 0)
     {
-      log_debug("== error in read()");
+      log_debug("error in read()");
       return ret;
     }
     else
@@ -265,7 +284,7 @@ ssize_t read(int fd, void* buf, size_t count)
 
 int __fxstat(int version, int fd, struct stat* buf)
 {
-  log_debug("== fstat(%d, %p)\n", fd, buf);
+  log_debug("fstat(%d, %p)\n", fd, buf);
   if (fd == CONCAT_MAGIC_FD)
   {
     memset(buf, 0, sizeof(*buf));
@@ -280,7 +299,7 @@ int __fxstat(int version, int fd, struct stat* buf)
 
 int close(int fd)
 {
-  log_debug("== close(%d)\n", fd);
+  log_debug("close(%d)\n", fd);
 
   if (fd == CONCAT_MAGIC_FD)
   {
@@ -292,5 +311,69 @@ int close(int fd)
     return orig_close(fd);
   }
 }
+
+FILE* concat_magicfile_stream = NULL;
+
+FILE* fopen(const char* pathname, const char* mode)
+{
+  if (strcmp(pathname, "CONCAT_MAGICFILE") == 0 ||
+      strcmp(pathname, "/CONCAT_MAGICFILE") == 0)
+  {
+    assert(!concat_magicfile_stream);
+    concat_magicfile_stream = calloc(1, sizeof(FILE));
+    return concat_magicfile_stream;
+  }
+  else
+  {
+    log_debug("fopen(\"%s\", \"%s\")\n", pathname, mode);
+    return orig_fopen(pathname, mode);
+  }
+}
+
+int fflush(FILE* stream)
+{
+  if (stream == concat_magicfile_stream)
+  {
+    return 0;
+  }
+  else
+  {
+    log_debug("fflush(%p)\n", stream);
+    return orig_fflush(stream);
+  }
+}
+
+int fclose(FILE* stream)
+{
+  if (stream == concat_magicfile_stream)
+  {
+    return 0;
+  }
+  else
+  {
+    log_debug("fclose(%p)\n", stream);
+    return orig_fclose(stream);
+  }
+}
+
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+  if (stream == concat_magicfile_stream)
+  {
+    return 0;
+  }
+  else
+  {
+    log_debug("fread(%p, %zu, %zu, %p)\n", ptr, size, nmemb, stream);
+    return orig_fread(ptr, size, nmemb, stream);
+  }
+}
+
+/*
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+{
+  return orig_fwrite(ptr, size, nmemb, stream);
+}
+*/
 
 /* EOF */
