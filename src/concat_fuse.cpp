@@ -49,7 +49,7 @@ int concat_getattr(const char* path, struct stat* stbuf)
   }
   else if (has_prefix(path, "/by-glob/"))
   {
-    std::string pattern = url_unquote(path + 8);
+    std::string pattern = url_unquote(path + 9);
     
     std::cout << "PATERN: '" << pattern << "'" << std::endl;
 
@@ -98,7 +98,7 @@ int concat_read(const char* path, char* buf, size_t len, off_t offset,
 
   if (has_prefix(path, "/by-glob/"))
   {
-    std::string pattern = url_unquote(path + 8);
+    std::string pattern = url_unquote(path + 9);
 
     auto it = std::find_if(g_multi_files.begin(), g_multi_files.end(),
                            [pattern](const MultiFilePtr& multi_file) {
@@ -145,7 +145,7 @@ int concat_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
 
     for(const auto& multi_file : g_multi_files)
     {
-      filler(buf, multi_file->get_pattern().c_str(), NULL, 0);
+      filler(buf, url_quote(multi_file->get_pattern()).c_str(), NULL, 0);
     }
     
     return 0;
