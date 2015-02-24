@@ -14,7 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from glob import glob
+
 
 developer_cxxflags = [
     # "-ansi",
@@ -35,8 +37,10 @@ developer_cxxflags = [
     # "-Wunreachable-code",
 ]
 
+
 def options(opt):
     opt.load("compiler_cxx")
+
 
 def configure(conf):
     conf.load("compiler_cxx")
@@ -45,7 +49,10 @@ def configure(conf):
     conf.env.append_value('CXXFLAGS', ["-std=c++14", "-O2", "-g"])
     conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
 
+
 def build(bld):
+    bld.install_files('${PREFIX}/bin', ['vcat'])
+
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
                       "src/multi_file.cpp",
@@ -75,7 +82,8 @@ def build(bld):
                 source=glob("tests/*_test.cpp"),
                 includes=["src/"],
                 cxxflags=["-isystem", bld.path.find_dir("external/gtest-1.7.0/include/").abspath()],
-                use=(["gtest", "gtest_main", "concat_fuse"]))
+                use=(["gtest", "gtest_main", "concat_fuse"]),
+                install_path=None)
 
 
 # EOF #
