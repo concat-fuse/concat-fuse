@@ -51,7 +51,7 @@ def configure(conf):
 
 
 def build(bld):
-    bld.install_as('${PREFIX}/bin/vcat', ['vcat'], chmod=0755)
+    bld.install_as('${PREFIX}/bin/vcat', ['vcat.py'], chmod=0755)
 
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
@@ -77,7 +77,7 @@ def build(bld):
               source=["external/gtest-1.7.0/src/gtest_main.cc"],
               includes=["external/gtest-1.7.0/include/",
                         "external/gtest-1.7.0/"])
-    
+
     bld.program(target="test_concat_fuse",
                 source=glob("tests/*_test.cpp"),
                 includes=["src/"],

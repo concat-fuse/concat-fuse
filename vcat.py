@@ -26,8 +26,11 @@ import subprocess
 def init_concat_fuse():
     """Returns the name of the concat-fuse directory and mount it when needed"""
     
-    runtime_base_dir = os.environ.get("XDG_RUNTIME_DIR") or os.environ["HOME"]
-    concat_fuse_dir = os.path.join(runtime_base_dir, "concat-fuse")
+    runtime_base_dir = os.environ.get("XDG_RUNTIME_DIR")
+    if runtime_base_dir:
+        concat_fuse_dir = os.path.join(runtime_base_dir, "concat-fuse")
+    else:
+        concat_fuse_dir = os.path.join(os.environ["HOME"], ".concat-fuse")
 
     if not os.path.exists(concat_fuse_dir):
         os.mkdir(concat_fuse_dir)
