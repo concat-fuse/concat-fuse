@@ -96,7 +96,7 @@ MultiFile::find_file(size_t* offset)
     }
     else
     {
-      return i;
+      return static_cast<int>(i);
     }
   }
   return -1;
@@ -149,7 +149,10 @@ MultiFile::read_subfile(const std::string& filename, size_t offset, char* buf, s
   else
   {
     ::lseek(fd, offset, SEEK_SET);
-    ::read(fd, buf, count);
+    if (::read(fd, buf, count) < 0)
+    {
+      return; // FIXME: error
+    }
     ::close(fd);
   }
 }

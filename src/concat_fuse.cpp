@@ -107,7 +107,7 @@ int concat_read(const char* path, char* buf, size_t len, off_t offset,
 
     if (it != g_multi_files.end())
     {
-      return (*it)->read(offset, buf, len);
+      return static_cast<int>((*it)->read(offset, buf, len));
     }
     else
     {
@@ -168,7 +168,7 @@ int concat_release(const char* path, struct fuse_file_info*)
   return 0;
 }
 
-int main(int argc, char** argv)
+int concat_fuse_main(int argc, char** argv)
 {
   struct fuse_operations ops;
   memset(&ops, 0, sizeof(ops));

@@ -14,11 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_UTIL_HPP
-#define HEADER_UTIL_HPP
+#include "util.hpp"
 
 #include <assert.h>
 #include <sstream>
+#include <iostream>
+#include <string.h>
 
 bool is_hex(char c)
 {
@@ -52,7 +53,7 @@ std::string url_quote(const std::string& url)
   std::ostringstream str;
   str.fill('0');
   str << std::hex;
-   
+
   for(std::string::size_type i = 0; i < url.size(); ++i)
   {
     if (isalpha(url[i]))
@@ -64,7 +65,7 @@ std::string url_quote(const std::string& url)
       str << "%" << static_cast<int>(url[i]);
     }
   }
-  
+
   return str.str();
 }
 
@@ -78,8 +79,7 @@ std::string url_unquote(const std::string& url)
     {
       if (i+2 < url.size() && is_hex(url[i+1]) && is_hex(url[i+2]))
       {
-        char c = (hex2int(url[i+1]) << 4) | hex2int(url[i+2]);
-        std::cout << hex2int(url[i+1]) << " -- " << hex2int(url[i+2]) << std::endl;
+        char c = static_cast<char>((hex2int(url[i+1]) << 4) | hex2int(url[i+2]));
         str << c;
         i += 2;
       }
@@ -94,7 +94,7 @@ std::string url_unquote(const std::string& url)
       str << url[i];
     }
   }
-  
+
   return str.str();
 }
 
@@ -111,7 +111,5 @@ bool has_prefix(const char* text, const char* prefix)
     return strncmp(prefix, text, prefix_len) == 0;
   }
 }
-
-#endif
 
 /* EOF */

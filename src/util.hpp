@@ -14,44 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#ifndef HEADER_UTIL_HPP
+#define HEADER_UTIL_HPP
 
 #include <string>
-#include <vector>
 
-struct FileInfo
-{
-  std::string filename;
-  size_t size;
-};
+bool is_hex(char c);
+int hex2int(char c);
 
-class MultiFile
-{
-private:
-  std::string m_pattern;
-  size_t m_pos;
+std::string url_quote(const std::string& url);
+std::string url_unquote(const std::string& url);
 
-  std::vector<FileInfo> m_files;
-  size_t m_total_size;
-  
-public:
-  MultiFile(const std::string& pattern);
-  
-  ssize_t read(size_t pos, char* buf, size_t count);
-
-  std::string get_pattern() const { return m_pattern; }
-  size_t get_size() const { return m_total_size; }
-  
-private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
-  
-private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
-};
+bool has_prefix(const char* text, const char* prefix);
 
 #endif
 
