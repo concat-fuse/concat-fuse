@@ -107,7 +107,7 @@ int concat_read(const char* path, char* buf, size_t len, off_t offset,
 
     if (it != g_multi_files.end())
     {
-      return static_cast<int>((*it)->read(offset, buf, len));
+      return static_cast<int>((*it)->read(static_cast<size_t>(offset), buf, len));
     }
     else
     {

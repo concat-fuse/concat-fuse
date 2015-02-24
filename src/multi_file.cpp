@@ -47,7 +47,14 @@ size_t get_file_size(const char* filename)
   {
     off_t ret = lseek(fd, 0, SEEK_END);
     close(fd);
-    return ret;
+    if (ret < 0)
+    {
+      return 0;
+    }
+    else
+    {
+      return static_cast<size_t>(ret);
+    }
   }
 }
 
