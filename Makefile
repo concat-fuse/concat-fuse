@@ -16,7 +16,17 @@
 #    misrepresented as being the original software.
 # 3. This notice may not be removed or altered from any source distribution.
 
-concat.so : concat.c Makefile
-	$(CC) -std=gnu99 -Wall -fPIC -shared -o $@ $< -ldl
+all : concat.so concat_fuse example
+
+concat.so : concat.cpp Makefile
+	$(CXX) -std=gnu++14 -Wall -fPIC -shared -o $@ $< -ldl
+
+concat_fuse : concat_fuse.cpp multi_file.cpp Makefile util.hpp
+	$(CXX)  -o $@ concat_fuse.cpp multi_file.cpp -std=c++14 -Wall `pkg-config fuse --cflags --libs`
+
+example : example.c Makefile
+	$(CC) -o $@ $< `pkg-config fuse --cflags --libs`
+
+.PHONY : all
 
 # EOF #

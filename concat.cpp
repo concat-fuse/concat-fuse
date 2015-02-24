@@ -16,8 +16,6 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-#define _GNU_SOURCE
-
 #include <assert.h>
 #include <ctype.h>
 #include <dlfcn.h>
@@ -54,10 +52,11 @@ orig_fclose_t orig_fclose;
 orig_fread_t orig_fread;
 orig_fwrite_t orig_fwrite;
 
-#define CONCAT_MAGIC_FD INT_MAX
+FILE* concat_magicfile_stream = NULL;
+int concat_magicfile_fd = 0;
 
-#define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
-//#define log_debug(...)
+//#define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
+#define log_debug(...)
 
 typedef struct
 {
@@ -66,11 +65,12 @@ typedef struct
   int fd;
 } FileInfo;
 
-FileInfo* file_info_lst;
-int file_info_count;
+FileInfo* file_info_lst = NULL;
+int file_info_count = 0;
 
-size_t magicfile_pos;
-size_t magicfile_size;
+size_t magicfile_pos = 0;
+size_t magicfile_size = 0;
+struct stat magicfile_stat;
 
 size_t get_file_size(const char* filename)
 {
@@ -106,10 +106,10 @@ void collect_file_info()
     else
     {
       file_info_count = glob_data.gl_pathc;
-      file_info_lst = malloc(sizeof(FileInfo) * file_info_count);
+      file_info_lst = (FileInfo*)malloc(sizeof(FileInfo) * file_info_count);
 
       magicfile_size = 0;
-      for(int i = 0; i < glob_data.gl_pathc; ++i)
+      for(size_t i = 0; i < glob_data.gl_pathc; ++i)
       {
         file_info_lst[i].filename = strdup(glob_data.gl_pathv[i]);
         file_info_lst[i].size = get_file_size(file_info_lst[i].filename);
@@ -121,6 +121,11 @@ void collect_file_info()
 
         magicfile_size += file_info_lst[i].size;
       }
+
+      lstat(file_info_lst[0].filename, &magicfile_stat);
+      magicfile_stat.st_size = magicfile_size;
+
+      log_debug("magicfile_size = %zu\n", magicfile_size);
     }
     globfree(&glob_data);
   }
@@ -129,7 +134,8 @@ void collect_file_info()
 __attribute__ ((constructor))
 void init()
 {
-  log_debug("init()\n");
+  // do not place log_debug() here, as that uses fwrite() and will
+  // crash without the pointers set up properly
 
   orig_open = (orig_open_t)dlsym(RTLD_NEXT, "open");
   orig_lseek = (orig_lseek_t)dlsym(RTLD_NEXT, "lseek");
@@ -178,9 +184,11 @@ void read_subfile(const char* filename, size_t offset, void* buf, size_t count)
   }
 }
 
-ssize_t magicfile_read(size_t pos, void* buf, size_t count)
+ssize_t magicfile_read(size_t pos, void* void_buf, size_t count)
 {
-  log_debug("magicfile_read(%zu, %p, %zu)\n", pos, buf, count);
+  log_debug("magicfile_read(%zu, %p, %zu)\n", pos, void_buf, count);
+
+  char* buf = (char*)void_buf;
 
   size_t total_count = 0;
   while(count != 0)
@@ -218,8 +226,9 @@ int open(const char* pathname, int flags, ...)
       strcmp(pathname, "/CONCAT_MAGICFILE") == 0)
   {
     magicfile_pos = 0;
-    log_debug("magicopen(\"%s\", %d) -> %d\n", pathname, flags, 0);
-    return CONCAT_MAGIC_FD;
+    concat_magicfile_fd = orig_open("/dev/null", flags);
+    log_debug("magicopen(\"%s\", %d) -> %d\n", pathname, flags, concat_magicfile_fd);
+    return concat_magicfile_fd;
   }
   else
   {
@@ -233,7 +242,7 @@ off_t lseek(int fd, off_t offset, int whence)
 {
   log_debug("lseek(%d, %d, %d)\n", fd, (int)offset, whence);
 
-  if (fd == CONCAT_MAGIC_FD)
+  if (fd == concat_magicfile_fd)
   {
     switch(whence)
     {
@@ -262,7 +271,7 @@ ssize_t read(int fd, void* buf, size_t count)
 {
   log_debug("read(%d, %p, %zu)\n", fd, buf, count);
 
-  if (fd == CONCAT_MAGIC_FD)
+  if (fd == concat_magicfile_fd)
   {
     ssize_t ret = magicfile_read(magicfile_pos, buf, count);
     if (ret < 0)
@@ -285,10 +294,10 @@ ssize_t read(int fd, void* buf, size_t count)
 int __fxstat(int version, int fd, struct stat* buf)
 {
   log_debug("fstat(%d, %p)\n", fd, buf);
-  if (fd == CONCAT_MAGIC_FD)
+  if (fd == concat_magicfile_fd)
   {
-    memset(buf, 0, sizeof(*buf));
-    buf->st_size = magicfile_size;
+    memcpy(buf, &magicfile_stat, sizeof(struct stat));
+    log_debug("magicfstat(%d, %p) -> %zu\n", fd, buf, buf->st_size);
     return 0;
   }
   else
@@ -301,7 +310,7 @@ int close(int fd)
 {
   log_debug("close(%d)\n", fd);
 
-  if (fd == CONCAT_MAGIC_FD)
+  if (fd == concat_magicfile_fd)
   {
     magicfile_pos = 0;
     return 0;
@@ -312,15 +321,13 @@ int close(int fd)
   }
 }
 
-FILE* concat_magicfile_stream = NULL;
-
 FILE* fopen(const char* pathname, const char* mode)
 {
   if (strcmp(pathname, "CONCAT_MAGICFILE") == 0 ||
       strcmp(pathname, "/CONCAT_MAGICFILE") == 0)
   {
     assert(!concat_magicfile_stream);
-    concat_magicfile_stream = calloc(1, sizeof(FILE));
+    concat_magicfile_stream = orig_fopen("/dev/null", "rb");
     return concat_magicfile_stream;
   }
   else
@@ -347,7 +354,7 @@ int fclose(FILE* stream)
 {
   if (stream == concat_magicfile_stream)
   {
-    return 0;
+    return orig_fclose(concat_magicfile_stream);
   }
   else
   {
@@ -369,11 +376,9 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 }
 
-/*
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
   return orig_fwrite(ptr, size, nmemb, stream);
 }
-*/
 
 /* EOF */
