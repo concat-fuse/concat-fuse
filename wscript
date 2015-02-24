@@ -46,15 +46,19 @@ def configure(conf):
     conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
 
 def build(bld):
-    bld.stlib(target="libconcat_fuse",
+    bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
                       "src/multi_file.cpp",
                       "src/util.cpp"],
               use=["WARNINGS", "FUSE"])
 
-    bld.program(target="concat_fuse",
+    bld.program(target="concat-fuse",
                 source=["src/main.cpp"],
-                use=["WARNINGS", "libconcat_fuse", "FUSE"])
+                use=["WARNINGS", "concat_fuse", "FUSE"])
+
+    bld.program(target="concat-pattern",
+                source=["src/concat_pattern.cpp"],
+                use=["WARNINGS", "concat_fuse"])
 
     # build gtest
     bld.stlib(target="gtest",
@@ -71,7 +75,7 @@ def build(bld):
                 source=glob("tests/*_test.cpp"),
                 includes=["src/"],
                 cxxflags=["-isystem", bld.path.find_dir("external/gtest-1.7.0/include/").abspath()],
-                use=(["gtest", "gtest_main", "libconcat_fuse"]))
+                use=(["gtest", "gtest_main", "concat_fuse"]))
 
 
 # EOF #
