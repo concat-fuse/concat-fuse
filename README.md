@@ -8,13 +8,14 @@ a single one. It is essentially doing:
     cat *.txt > large_file
 
 But instead of creating `large_file`, it creates a virtual file and
-accesses the original `*.txt` files instead.
-
-`concat-fuse` can be used for example to do gapless playback of video
-files (when the video format allows it) or to access archive files
-that have been `split` into multiple parts. Alternatives such as
+accesses the original `*.txt` files instead. Alternatives such as
 `mkfifo` or regular piping can be used similarly, but fail at
 providing random access to the data.
+
+`concat-fuse` is especially useful when it comes to do gapless
+playback of video files (when the video format allows it) or to
+accessing archive files that have been `split` into multiple parts and
+where a temporary file would be to slow and cumbersome to deal with.
 
 
 Compilation
@@ -26,8 +27,30 @@ Compilation
     ./waf
 
 
+Installation
+------------
+
+    ./waf install
+
+The options `--prefix=PREFIX` and `--destdir=DESTDIR` are available to
+change the installation directory.
+
+
 Usage
 -----
+
+`concat-fuse` comes with a little script `vcat` that does the mounting
+magic behind the scene, usage is thus very simple:
+
+    $ echo "File Number One" > /tmp/1.txt
+    $ echo "File Number Two" > /tmp/2.txt
+    $ cat $(vcat "/tmp/*.txt")
+    File Number One
+    File Number Two
+
+
+Behind the scenes
+-----------------
 
 The following example should give an rough idea of how `concat-fuse`
 works. First lets create some test files that we later want to join:
