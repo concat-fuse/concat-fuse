@@ -40,18 +40,30 @@ developer_cxxflags = [
 
 def options(opt):
     opt.load("compiler_cxx")
+    opt.load('gnu_dirs')
+
+    gr = opt.add_option_group('concat-fuse options')
+    gr.add_option('--build-tests', action='store_true', default=False, help='Build tests')
+    gr.add_option('--developer', action='store_true', default=False, help='Switch on extra debug info, warnings and verbosity')
 
 
 def configure(conf):
     conf.load("compiler_cxx")
+    conf.load('gnu_dirs')
+
     conf.check_cfg(package='fuse', args=['--cflags', '--libs'])
 
-    conf.env.append_value('CXXFLAGS', ["-std=c++14", "-O2", "-g"])
-    conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
+    conf.env.append_value('CXXFLAGS', ["-std=c++14", "-O3", "-g"])
+
+    if conf.options.developer:
+        conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
+
+    conf.env.build_tests = conf.options.build_tests
 
 
 def build(bld):
     bld.install_as('${PREFIX}/bin/vcat', ['vcat.py'], chmod=0755)
+    bld.install_files('${MANDIR}/1', ["doc/vcat.1", "doc/concat-fuse.1"])
 
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
@@ -67,23 +79,23 @@ def build(bld):
                 source=["src/concat_pattern.cpp"],
                 use=["WARNINGS", "concat_fuse"])
 
-    # build gtest
-    bld.stlib(target="gtest",
-              source=["external/gtest-1.7.0/src/gtest-all.cc"],
-              includes=["external/gtest-1.7.0/include/",
-                        "external/gtest-1.7.0/"])
+    if bld.env.build_tests:
+        bld.stlib(target="gtest",
+                  source=["external/gtest-1.7.0/src/gtest-all.cc"],
+                  includes=["external/gtest-1.7.0/include/",
+                            "external/gtest-1.7.0/"])
 
-    bld.stlib(target="gtest_main",
-              source=["external/gtest-1.7.0/src/gtest_main.cc"],
-              includes=["external/gtest-1.7.0/include/",
-                        "external/gtest-1.7.0/"])
+        bld.stlib(target="gtest_main",
+                  source=["external/gtest-1.7.0/src/gtest_main.cc"],
+                  includes=["external/gtest-1.7.0/include/",
+                            "external/gtest-1.7.0/"])
 
-    bld.program(target="test_concat_fuse",
-                source=glob("tests/*_test.cpp"),
-                includes=["src/"],
-                cxxflags=["-isystem", bld.path.find_dir("external/gtest-1.7.0/include/").abspath()],
-                use=(["gtest", "gtest_main", "concat_fuse"]),
-                install_path=None)
+        bld.program(target="test_concat_fuse",
+                    source=glob("tests/*_test.cpp"),
+                    includes=["src/"],
+                    cxxflags=["-isystem", bld.path.find_dir("external/gtest-1.7.0/include/").abspath()],
+                    use=(["gtest", "gtest_main", "concat_fuse"]),
+                    install_path=None)
 
 
 # EOF #

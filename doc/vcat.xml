@@ -1,0 +1,85 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % concatstuff SYSTEM "concat.ent">
+%concatstuff;
+]>
+<refentry id="vcat">
+  <refmeta>
+    <refentrytitle>
+      <application>vcat</application>
+    </refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="version">&concat_version;</refmiscinfo>
+    <refmiscinfo class="author">&concat_version;</refmiscinfo>
+    <refmiscinfo class="manual">User Commands</refmiscinfo>
+    <refmiscinfo class="source">vcat</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>
+      <application>vcat</application>
+    </refname>
+    <refpurpose>
+      Access groups of files as if they were a single large file
+    </refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>vcat</command>
+      <arg choice="opt" rep="repeat">OPTION</arg>
+      <arg choice="opt">-h</arg>
+      <arg choice="opt">GLOB</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <command>vcat</command> is a wrapper around
+      <command>concat-fuse</command> that allows accessing groups of
+      files, selected by a glob pattern, as if they were a single
+      large file.
+    </para>
+    <para>
+      <command>vcat</command> works by mounting the virtual filesystem
+      <command>concat-fuse</command> and then accessing a file within
+      it that acts as if it contained all the individual files
+      concatenated.
+    </para>
+  </refsect1>
+  <refsect1>
+    <title>Example</title>
+    <para>
+      A simple example of <command>vcat</command> use would look like this:
+    </para>
+    <programlisting><![CDATA[$ echo "File Number One" > /tmp/1.txt
+$ echo "File Number Two" > /tmp/2.txt
+$ cat $(vcat "/tmp/*.txt")
+File Number One
+File Number Two]]></programlisting>
+
+    <para>
+      Note that the glob pattern must be quoted for it to work.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Bugs</title>
+    <para>
+      <command>vcat</command> will only accept a single glob pattern
+      per call and doesn't provide a way to reorder them.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>See also</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>concat-fuse</refentrytitle>
+        <manvolnum>1</manvolnum>
+        </citerefentry>,
+    </para>
+  </refsect1>
+</refentry>

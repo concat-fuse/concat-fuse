@@ -1,0 +1,49 @@
+'\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH "vcat " 1 "24 February 2015" 0.1.0 "User Commands"
+.SH NAME
+vcat
+\- Access groups of files as if they were a single large file 
+.SH SYNOPSIS
+'nh
+.fi
+.ad l
+\fBvcat\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[OPTION]\&... [-h] [GLOB]
+'in \n(.iu-\nxu
+.ad b
+'hy
+.SH DESCRIPTION
+\fBvcat\fR is a wrapper around
+\fBconcat-fuse\fR that allows accessing groups of
+files, selected by a glob pattern, as if they were a single
+large file.
+.PP
+\fBvcat\fR works by mounting the virtual filesystem
+\fBconcat-fuse\fR and then accessing a file within
+it that acts as if it contained all the individual files
+concatenated.
+.SH EXAMPLE
+A simple example of \fBvcat\fR use would look like this:
+.PP
+.nf
+\*(T<$ echo "File Number One" > /tmp/1.txt
+$ echo "File Number Two" > /tmp/2.txt
+$ cat $(vcat "/tmp/*.txt")
+File Number One
+File Number Two\*(T>
+.fi
+.PP
+Note that the glob pattern must be quoted for it to work.
+.SH BUGS
+\fBvcat\fR will only accept a single glob pattern
+per call and doesn't provide a way to reorder them.
+.SH "SEE ALSO"
+\fBconcat-fuse\fR(1),

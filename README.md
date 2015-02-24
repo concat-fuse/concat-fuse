@@ -26,6 +26,10 @@ Compilation
     ./waf configure
     ./waf
 
+To switch on test case building and extra warning flags use:
+
+    ./waf configure --developer --build-tests
+
 
 Installation
 ------------
@@ -47,6 +51,8 @@ magic behind the scene, usage is thus very simple:
     $ cat $(vcat "/tmp/*.txt")
     File Number One
     File Number Two
+
+Don't forget to quote the glob pattern when passing to `vcat`.
 
 
 Behind the scenes

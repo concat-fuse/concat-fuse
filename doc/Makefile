@@ -1,0 +1,15 @@
+all: vcat.1 concat-fuse.1
+
+%.1: %.xml Makefile
+	echo "<!ENTITY concat_version \"$$(cat ../VERSION)\">" > concat.ent
+	db2x_xsltproc --stylesheet man "$<" | db2x_manxml
+
+# build html
+#	xmlto xhtml -o xboxdrv.html -m config.xsl xboxdrv.xml
+#	mv -v xboxdrv.html/index.html xboxdrv.html/index.orig.html
+# 	tidy -q -utf8 -indent -wrap 1000  -o xboxdrv.html/index.html xboxdrv.html/index.orig.html
+
+#	docbook2x-texi --output-dir "../build/doc/" "$<"
+#        MANWIDTH=80 man -l xboxdrv.1
+
+# EOF #

@@ -1,0 +1,74 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % concatstuff SYSTEM "concat.ent">
+%concatstuff;
+]>
+<refentry id="concat-fuse">
+  <refmeta>
+    <refentrytitle>
+      <application>concat-fuse</application>
+    </refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="version">&concat_version;</refmiscinfo>
+    <refmiscinfo class="author">&concat_version;</refmiscinfo>
+    <refmiscinfo class="manual">User Commands</refmiscinfo>
+    <refmiscinfo class="source">concat-fuse</refmiscinfo>
+  </refmeta>
+
+  <refnamediv>
+    <refname>
+      <application>concat-fuse</application>
+    </refname>
+    <refpurpose>
+      A virtual filesystem that allows access of groups of files as if
+      they were a single large one
+    </refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>concat-fuse</command>
+      <arg choice="opt" rep="repeat">OPTION</arg>
+      <arg choice="opt">MOUNTPOINT</arg>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsect1>
+    <title>Description</title>
+    <para>
+      <command>concat-fuse</command> is a FUSE based filesystem that
+      allows accessing groups of files, selected by a glob pattern, as
+      if they were a single large file. In most cases direct
+      interaction with <command>concat-fuse</command> isn't needed, as
+      the convinience tool <command>vcat</command> hides the plumbing
+      away.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Structure</title>
+    <para>
+      The filesystem, once mounted, provides a single subdirectory
+      named <filename>by-glob/</filename>. Accessing non-existing
+      files in that directory will create a virtual files that will
+      act as if it contained the concatenated data of the individual
+      files. The individual files will be aquired by interpreting the
+      filename as a glob pattern.
+    </para>
+    <para>
+      The glob pattern itself has to be provided in URL encoded
+      manner, meaning "/" replaced with "%2f" and so on.
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>See also</title>
+    <para>
+      <citerefentry>
+        <refentrytitle>vcat</refentrytitle>
+        <manvolnum>1</manvolnum>
+        </citerefentry>,
+    </para>
+  </refsect1>
+</refentry>

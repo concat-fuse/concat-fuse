@@ -1,0 +1,41 @@
+'\" -*- coding: us-ascii -*-
+.if \n(.g .ds T< \\FC
+.if \n(.g .ds T> \\F[\n[.fam]]
+.de URL
+\\$2 \(la\\$1\(ra\\$3
+..
+.if \n(.g .mso www.tmac
+.TH "concat-fuse " 1 "24 February 2015" 0.1.0 "User Commands"
+.SH NAME
+concat-fuse
+\- A virtual filesystem that allows access of groups of files as if they were a single large one 
+.SH SYNOPSIS
+'nh
+.fi
+.ad l
+\fBconcat-fuse\fR \kx
+.if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
+'in \n(.iu+\nxu
+[OPTION]\&... [MOUNTPOINT]
+'in \n(.iu-\nxu
+.ad b
+'hy
+.SH DESCRIPTION
+\fBconcat-fuse\fR is a FUSE based filesystem that
+allows accessing groups of files, selected by a glob pattern, as
+if they were a single large file. In most cases direct
+interaction with \fBconcat-fuse\fR isn't needed, as
+the convinience tool \fBvcat\fR hides the plumbing
+away.
+.SH STRUCTURE
+The filesystem, once mounted, provides a single subdirectory
+named \*(T<\fIby\-glob/\fR\*(T>. Accessing non-existing
+files in that directory will create a virtual files that will
+act as if it contained the concatenated data of the individual
+files. The individual files will be aquired by interpreting the
+filename as a glob pattern.
+.PP
+The glob pattern itself has to be provided in URL encoded
+manner, meaning "/" replaced with "%2f" and so on.
+.SH "SEE ALSO"
+\fBvcat\fR(1),
