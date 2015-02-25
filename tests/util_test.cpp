@@ -73,4 +73,10 @@ TEST(UtilTest, has_prefix)
   ASSERT_FALSE(has_prefix("foo", "foobar"));
 }
 
+TEST(UtilTest, sha1sum)
+{
+  ASSERT_EQ(sha1sum("", 0), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+  ASSERT_EQ(sha1sum("Hello World", 11), "0a4d55a8d778e5022fab701977c5d840bbc486d0");
+}
+
 /* EOF */

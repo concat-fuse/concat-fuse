@@ -52,6 +52,7 @@ def configure(conf):
     conf.load('gnu_dirs')
 
     conf.check_cfg(package='fuse', args=['--cflags', '--libs'])
+    conf.check_cfg(package='mhash', args=['--cflags', '--libs'])
 
     conf.env.append_value('CXXFLAGS', ["-std=c++14", "-O3", "-g"])
 
@@ -69,11 +70,11 @@ def build(bld):
               source=["src/concat_fuse.cpp",
                       "src/multi_file.cpp",
                       "src/util.cpp"],
-              use=["WARNINGS", "FUSE"])
+              use=["WARNINGS", "FUSE", "MHASH"])
 
     bld.program(target="concat-fuse",
                 source=["src/main.cpp"],
-                use=["WARNINGS", "concat_fuse", "FUSE"])
+                use=["WARNINGS", "concat_fuse", "FUSE", "MHASH"])
 
     bld.program(target="concat-pattern",
                 source=["src/concat_pattern.cpp"],
@@ -94,7 +95,7 @@ def build(bld):
                     source=glob("tests/*_test.cpp"),
                     includes=["src/"],
                     cxxflags=["-isystem", bld.path.find_dir("external/gtest-1.7.0/include/").abspath()],
-                    use=(["gtest", "gtest_main", "concat_fuse"]),
+                    use=(["gtest", "gtest_main", "concat_fuse", "MHASH"]),
                     install_path=None)
 
 

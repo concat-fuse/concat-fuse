@@ -27,6 +27,8 @@ std::string url_unquote(const std::string& url);
 
 bool has_prefix(const char* text, const char* prefix);
 
+std::string sha1sum(const char* data, size_t len);
+
 #endif
 
 /* EOF */

@@ -16,10 +16,15 @@
 
 #include "util.hpp"
 
+#include <array>
 #include <assert.h>
+#include <iostream>
+#include <mhash.h>
+#include <sstream>
+#include <string.h>
 #include <sstream>
 #include <iostream>
-#include <string.h>
+#include <iomanip>
 
 bool is_hex(char c)
 {
@@ -109,6 +114,26 @@ bool has_prefix(const char* text, const char* prefix)
   else
   {
     return strncmp(prefix, text, prefix_len) == 0;
+  }
+}
+
+std::string sha1sum(const char* data, size_t len)
+{
+  MHASH td = mhash_init(MHASH_SHA1);
+  if (td == MHASH_FAILED)
+  {
+    return std::string();
+  }
+  else
+  {
+    mhash(td, data, static_cast<mutils_word32>(len));
+    std::array<uint8_t, 20> digest;
+    mhash_deinit(td, digest.data());
+
+    std::ostringstream out;
+    for (mutils_word32 i = 0; i < digest.size(); ++i)
+      out << std::setfill('0') << std::setw(2) << std::hex << int(digest[i]);
+    return out.str();
   }
 }
 
