@@ -14,41 +14,42 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#include "glob_file_list.hpp"
 
-#include <memory>
-#include <string>
-#include <sys/types.h>
-#include <vector>
+#include <glob.h>
 
-#include "file_list.hpp"
+#include "util.hpp"
 
-class MultiFile
+GlobFileList::GlobFileList(const std::vector<std::string>& globs) :
+  m_globs(globs)
 {
-private:
-  size_t m_pos;
+}
 
-  std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
+std::vector<FileInfo>
+GlobFileList::scan() const
+{
+  std::vector<FileInfo> result;
 
-public:
-  MultiFile(std::unique_ptr<FileList> file_list);
+  for(const auto& pattern : m_globs)
+  {
+    glob_t glob_data;
 
-  ssize_t read(size_t pos, char* buf, size_t count);
+    int ret = glob(pattern.c_str(), 0, NULL, &glob_data);
+    if (ret == GLOB_NOMATCH)
+    {
+      log_debug("concat.so: no matching files found for pattern: %s\n", pattern.c_str());
+    }
+    else
+    {
+      for(size_t i = 0; i < glob_data.gl_pathc; ++i)
+      {
+        result.push_back({glob_data.gl_pathv[i], get_file_size(glob_data.gl_pathv[i])});
+      }
+    }
+    globfree(&glob_data);
+  }
 
-  size_t get_size() const;
-
-private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
-
-private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
-};
-
-#endif
+  return result;
+}
 
 /* EOF */

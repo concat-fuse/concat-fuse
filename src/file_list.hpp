@@ -14,39 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#ifndef HEADER_FILE_LIST_HPP
+#define HEADER_FILE_LIST_HPP
 
-#include <memory>
 #include <string>
-#include <sys/types.h>
 #include <vector>
 
-#include "file_list.hpp"
+struct FileInfo
+{
+  std::string filename;
+  size_t size;
+};
 
-class MultiFile
+class FileList
 {
 private:
-  size_t m_pos;
-
-  std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
-
 public:
-  MultiFile(std::unique_ptr<FileList> file_list);
+  FileList() {}
+  virtual ~FileList() {}
 
-  ssize_t read(size_t pos, char* buf, size_t count);
-
-  size_t get_size() const;
-
-private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
+  virtual std::vector<FileInfo> scan() const = 0;
 
 private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
+  FileList(const FileList&) = delete;
+  FileList& operator=(const FileList&) = delete;
 };
 
 #endif

@@ -16,6 +16,9 @@
 
 #include <gtest/gtest.h>
 
+#include <vector>
+#include <string>
+
 #include "util.hpp"
 
 TEST(UtilTest, is_hex)
@@ -77,6 +80,23 @@ TEST(UtilTest, sha1sum)
 {
   ASSERT_EQ(sha1sum("", 0), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
   ASSERT_EQ(sha1sum("Hello World", 11), "0a4d55a8d778e5022fab701977c5d840bbc486d0");
+}
+
+TEST(UtilTest, split)
+{
+  std::vector<std::string> multi_result{"Hello", "World", "Foobar"};
+  std::vector<std::string> one_result{"One"};
+  std::vector<std::string> not_empty_result{" "};
+  std::vector<std::string> empty_result;
+
+  ASSERT_NE(split("Hello\nWorld", '\n'), multi_result);
+  ASSERT_EQ(split("Hello\nWorld\nFoobar\n", '\n'), multi_result);
+  ASSERT_EQ(split("Hello\nWorld\nFoobar", '\n'), multi_result);
+  ASSERT_EQ(split(std::string("Hello\0World\0Foobar", 18), '\0'), multi_result);
+  ASSERT_EQ(split("", '\n'), empty_result);
+  ASSERT_EQ(split(" ", '\n'), not_empty_result);
+  ASSERT_EQ(split("One", '\n'), one_result);
+  ASSERT_EQ(split("One\n", '\n'), one_result);
 }
 
 /* EOF */

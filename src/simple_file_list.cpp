@@ -14,41 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#include "simple_file_list.hpp"
 
-#include <memory>
-#include <string>
-#include <sys/types.h>
-#include <vector>
+#include "util.hpp"
 
-#include "file_list.hpp"
-
-class MultiFile
+std::unique_ptr<SimpleFileList>
+SimpleFileList::from_file0(const std::string& data)
 {
-private:
-  size_t m_pos;
+  return std::make_unique<SimpleFileList>(split(data, '\0'));
+}
 
-  std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
+std::unique_ptr<SimpleFileList>
+SimpleFileList::from_file(const std::string& data)
+{
+  return std::make_unique<SimpleFileList>(split(data, '\n'));
+}
 
-public:
-  MultiFile(std::unique_ptr<FileList> file_list);
+std::vector<FileInfo>
+SimpleFileList::scan() const
+{
+  std::vector<FileInfo> result;
 
-  ssize_t read(size_t pos, char* buf, size_t count);
+  for(const auto& filename : m_files)
+  {
+    result.push_back({filename, get_file_size(filename)});
+  }
 
-  size_t get_size() const;
-
-private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
-
-private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
-};
-
-#endif
+  return result;
+}
 
 /* EOF */

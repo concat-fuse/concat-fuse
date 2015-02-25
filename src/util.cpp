@@ -18,13 +18,14 @@
 
 #include <array>
 #include <assert.h>
+#include <fcntl.h>
+#include <iomanip>
 #include <iostream>
 #include <mhash.h>
 #include <sstream>
 #include <string.h>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 bool is_hex(char c)
 {
@@ -134,6 +135,52 @@ std::string sha1sum(const char* data, size_t len)
     for (mutils_word32 i = 0; i < digest.size(); ++i)
       out << std::setfill('0') << std::setw(2) << std::hex << int(digest[i]);
     return out.str();
+  }
+}
+
+std::vector<std::string> split(const std::string& str, char c)
+{
+  std::vector<std::string> result;
+
+  size_t start = 0;
+  size_t i = 0;
+  for(i = 0; i < str.size(); ++i)
+  {
+    if (str[i] == c)
+    {
+      result.push_back(str.substr(start, i - start));
+      start = i + 1;
+    }
+  }
+
+  if (start != str.size())
+  {
+    result.push_back(str.substr(start, str.size() - start));
+  }
+
+  return result;
+}
+
+size_t get_file_size(const std::string& filename)
+{
+  int fd = open(filename.c_str(), O_RDONLY);
+  if (fd < 0)
+  {
+    perror(filename.c_str());
+    return 0;
+  }
+  else
+  {
+    off_t ret = lseek(fd, 0, SEEK_END);
+    close(fd);
+    if (ret < 0)
+    {
+      return 0;
+    }
+    else
+    {
+      return static_cast<size_t>(ret);
+    }
   }
 }
 

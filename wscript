@@ -32,9 +32,9 @@ developer_cxxflags = [
     "-Wcast-qual",
     "-Winit-self", # only works with >= -O1
     "-Wno-unused-parameter",
-    # "-Winline",
-    # "-Wfloat-equal",
-    # "-Wunreachable-code",
+    "-Winline",
+    "-Wfloat-equal",
+    "-Wunreachable-code",
 ]
 
 
@@ -54,7 +54,7 @@ def configure(conf):
     conf.check_cfg(package='fuse', args=['--cflags', '--libs'])
     conf.check_cfg(package='mhash', args=['--cflags', '--libs'])
 
-    conf.env.append_value('CXXFLAGS', ["-std=c++14", "-O3", "-g"])
+    conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O3", "-g"])
 
     if conf.options.developer:
         conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
@@ -69,6 +69,8 @@ def build(bld):
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
                       "src/multi_file.cpp",
+                      "src/simple_file_list.cpp",
+                      "src/glob_file_list.cpp",
                       "src/util.cpp"],
               use=["WARNINGS", "FUSE", "MHASH"])
 

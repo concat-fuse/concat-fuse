@@ -14,39 +14,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#ifndef HEADER_GLOB_FILE_LIST_HPP
+#define HEADER_GLOB_FILE_LIST_HPP
 
-#include <memory>
-#include <string>
-#include <sys/types.h>
 #include <vector>
+#include <string>
 
 #include "file_list.hpp"
 
-class MultiFile
+class GlobFileList : public FileList
 {
 private:
-  size_t m_pos;
-
-  std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
+  std::vector<std::string> m_globs;
 
 public:
-  MultiFile(std::unique_ptr<FileList> file_list);
+  GlobFileList(const std::vector<std::string>& globs);
 
-  ssize_t read(size_t pos, char* buf, size_t count);
-
-  size_t get_size() const;
+  std::vector<FileInfo> scan() const override;
 
 private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
-
-private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
+  GlobFileList(const GlobFileList&) = delete;
+  GlobFileList& operator=(const GlobFileList&) = delete;
 };
 
 #endif

@@ -18,6 +18,10 @@
 #define HEADER_UTIL_HPP
 
 #include <string>
+#include <vector>
+
+#define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
+//#define log_debug(...)
 
 bool is_hex(char c);
 int hex2int(char c);
@@ -28,6 +32,10 @@ std::string url_unquote(const std::string& url);
 bool has_prefix(const char* text, const char* prefix);
 
 std::string sha1sum(const char* data, size_t len);
+
+std::vector<std::string> split(const std::string& str, char c);
+
+size_t get_file_size(const std::string& filename);
 
 #endif
 

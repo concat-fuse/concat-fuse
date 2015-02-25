@@ -16,7 +16,6 @@
 
 #include "multi_file.hpp"
 
-#include <glob.h>
 #include <assert.h>
 #include <ctype.h>
 #include <dlfcn.h>
@@ -30,66 +29,25 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
-//#define log_debug(...)
+#include "util.hpp"
 
-namespace {
-
-size_t get_file_size(const char* filename)
-{
-  int fd = open(filename, O_RDONLY);
-  if (fd < 0)
-  {
-    perror(filename);
-    return 0;
-  }
-  else
-  {
-    off_t ret = lseek(fd, 0, SEEK_END);
-    close(fd);
-    if (ret < 0)
-    {
-      return 0;
-    }
-    else
-    {
-      return static_cast<size_t>(ret);
-    }
-  }
-}
-
-} // namespace
-
-MultiFile::MultiFile(const std::string& pattern) :
-  m_pattern(pattern),
+MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
   m_pos(0),
-  m_files(),
-  m_total_size(0)
+  m_file_list(std::move(file_list)),
+  m_files()
 {
-  collect_file_info();
+  m_files = m_file_list->scan();
 }
 
-void
-MultiFile::collect_file_info()
+size_t
+MultiFile::get_size() const
 {
-  glob_t glob_data;
-
-  int ret = glob(m_pattern.c_str(), 0, NULL, &glob_data);
-  if (ret == GLOB_NOMATCH)
+  size_t total = 0;
+  for(const auto& file : m_files)
   {
-    log_debug("concat.so: no matching files found for pattern: %s\n", m_pattern.c_str());
+    total += file.size;
   }
-  else
-  {
-    m_total_size = 0;
-    for(size_t i = 0; i < glob_data.gl_pathc; ++i)
-    {
-      m_files.push_back({glob_data.gl_pathv[i], get_file_size(glob_data.gl_pathv[i])});
-        
-      m_total_size += m_files.back().size;
-    }
-  }
-  globfree(&glob_data);
+  return total;
 }
 
 int
