@@ -21,13 +21,13 @@
 std::unique_ptr<SimpleFileList>
 SimpleFileList::from_file0(const std::string& data)
 {
-  return std::make_unique<SimpleFileList>(split(data, '\0'));
+  return make_unique<SimpleFileList>(split(data, '\0'));
 }
 
 std::unique_ptr<SimpleFileList>
 SimpleFileList::from_file(const std::string& data)
 {
-  return std::make_unique<SimpleFileList>(split(data, '\n'));
+  return make_unique<SimpleFileList>(split(data, '\n'));
 }
 
 std::vector<FileInfo>

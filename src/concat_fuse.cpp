@@ -87,7 +87,7 @@ int concat_getattr(const char* path, struct stat* stbuf)
     if (it == g_multi_files.end())
     {
       std::vector<std::string> patterns{patterns};
-      auto multi_file = std::make_unique<MultiFile>(std::make_unique<GlobFileList>(patterns));
+      auto multi_file = make_unique<MultiFile>(make_unique<GlobFileList>(patterns));
 
       std::cout << "Making new multifile" << std::endl;
 

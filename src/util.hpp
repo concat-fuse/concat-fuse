@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
 //#define log_debug(...)
@@ -36,6 +37,12 @@ std::string sha1sum(const char* data, size_t len);
 std::vector<std::string> split(const std::string& str, char c);
 
 size_t get_file_size(const std::string& filename);
+
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
 
 #endif
 

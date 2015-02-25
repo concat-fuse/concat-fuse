@@ -52,7 +52,8 @@ def configure(conf):
     conf.load('gnu_dirs')
 
     conf.check_cfg(package='fuse', args=['--cflags', '--libs'])
-    conf.check_cfg(package='mhash', args=['--cflags', '--libs'])
+    if not conf.check_cfg(package='mhash', args=['--cflags', '--libs'], mandatory=False):
+        conf.check(lib="mhash")
 
     conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O3", "-g"])
 
