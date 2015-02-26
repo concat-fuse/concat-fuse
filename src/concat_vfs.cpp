@@ -166,7 +166,7 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
     std::cout.write(buf, len);
     std::cout << std::endl;
 #endif
-    m_from_file0_tmpbuf[fi->fh - 1].append(buf, len);
+    m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)].append(buf, len);
     return static_cast<int>(len);
   }
   else
@@ -190,7 +190,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 
   if (strcmp(path, "/from-file0/control") == 0)
   {
-    const std::string& data = m_from_file0_tmpbuf[fi->fh - 1];
+    const std::string& data = m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
     std::string sha1 = sha1sum(data);
 
 #if 0
