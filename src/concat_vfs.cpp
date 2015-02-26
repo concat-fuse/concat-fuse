@@ -39,6 +39,9 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
 
   memset(stbuf, 0, sizeof(*stbuf));
 
+  stbuf->st_uid = fuse_get_context()->uid;
+  stbuf->st_gid = fuse_get_context()->gid;
+  
   if (strcmp(path, "/") == 0 ||
       strcmp(path, "/from-file0") == 0)
   {
@@ -90,7 +93,7 @@ int
 ConcatVFS::open(const char* path, struct fuse_file_info* fi)
 {
   log_debug("open(%s, %" PRIu64 ")\n", path, fi->fh);
-  
+
   if (has_prefix(path, "/from-file0/"))
   {
     if (strcmp(path, "/from-file0/control") == 0)
@@ -124,7 +127,7 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info*)
 {
   log_debug("read(%s)\n", path);
-  
+
   if (has_prefix(path, "/from-file0/"))
   {
     if (strcmp(path, "/from-file0/control") == 0)
@@ -155,14 +158,14 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
                      struct fuse_file_info* fi)
 {
   log_debug("write(%s) -> %" PRId64 "\n", path, fi->fh);
-  
+
   if (strcmp(path, "/from-file0/control") == 0)
   {
-#if 0    
+#if 0
     std::cout << "STUFF: " << m_from_file0_tmpbuf.size() << " " << std::endl;
     std::cout.write(buf, len);
     std::cout << std::endl;
-#endif    
+#endif
     m_from_file0_tmpbuf[fi->fh - 1].append(buf, len);
     return static_cast<int>(len);
   }
@@ -184,7 +187,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 {
   // called once for file close
   log_debug("release(%s) -> %" PRId64 "\n", path, fi->fh);
-  
+
   if (strcmp(path, "/from-file0/control") == 0)
   {
     const std::string& data = m_from_file0_tmpbuf[fi->fh - 1];
@@ -193,7 +196,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 #if 0
     std::cout << "RECEIVED: " << sha1 << "\n" << data << std::endl;
 #endif
-    
+
     auto it = m_from_file0_multi_files.find(sha1);
     if (it == m_from_file0_multi_files.find(sha1))
     {
@@ -224,7 +227,7 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
                    struct fuse_file_info* fi)
 {
   log_debug("readdir(%s)\n", path);
-  
+
   if (strcmp(path, "/") == 0)
   {
     filler(buf, ".", NULL, 0);
