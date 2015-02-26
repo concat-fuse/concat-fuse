@@ -69,6 +69,7 @@ def build(bld):
 
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
+                      "src/concat_vfs.cpp",
                       "src/multi_file.cpp",
                       "src/simple_file_list.cpp",
                       "src/glob_file_list.cpp",
@@ -78,10 +79,6 @@ def build(bld):
     bld.program(target="concat-fuse",
                 source=["src/main.cpp"],
                 use=["WARNINGS", "concat_fuse", "FUSE", "MHASH"])
-
-    bld.program(target="concat-pattern",
-                source=["src/concat_pattern.cpp"],
-                use=["WARNINGS", "concat_fuse"])
 
     if bld.env.build_tests:
         bld.stlib(target="gtest",
