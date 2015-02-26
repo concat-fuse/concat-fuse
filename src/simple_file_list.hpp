@@ -32,7 +32,7 @@ public:
 
 public:
   SimpleFileList(const std::vector<std::string>& files) :
-    m_files()
+    m_files(files)
   {}
 
   std::vector<FileInfo> scan() const override;

@@ -36,8 +36,8 @@ public:
   MultiFile(std::unique_ptr<FileList> file_list);
 
   ssize_t read(size_t pos, char* buf, size_t count);
-
   size_t get_size() const;
+  void refresh();
 
 private:
   void collect_file_info();

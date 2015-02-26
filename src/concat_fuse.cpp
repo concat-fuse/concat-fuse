@@ -16,13 +16,15 @@
 
 #define FUSE_USE_VERSION 26
 
-#include <fuse.h>
-#include <string.h>
-#include <iostream>
-#include <vector>
-#include <memory>
 #include <algorithm>
+#include <fuse.h>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string.h>
+#include <vector>
 
+#include "simple_file_list.hpp"
 #include "glob_file_list.hpp"
 #include "multi_file.hpp"
 #include "util.hpp"
@@ -30,8 +32,8 @@
 using MultiFilePtr = std::unique_ptr<MultiFile>;
 std::vector<MultiFilePtr> g_multi_files;
 
-std::vector<std::string> g_from_file;
-std::vector<std::string> g_from_file0;
+std::vector<std::string> g_from_file_tmpbuf;
+std::map<std::string, MultiFilePtr> g_from_file_multi_files;
 
 int concat_getattr(const char* path, struct stat* stbuf)
 {
@@ -40,71 +42,38 @@ int concat_getattr(const char* path, struct stat* stbuf)
   memset(stbuf, 0, sizeof(*stbuf));
 
   if (strcmp(path, "/") == 0 ||
-      strcmp(path, "/by-glob") == 0 ||
-      strcmp(path, "/from-file") == 0 ||
-      strcmp(path, "/from-file0") == 0)
+      strcmp(path, "/from-file") == 0)
   {
     stbuf->st_mode = S_IFDIR | 0755;
     stbuf->st_nlink = 2;
     return 0;
   }
-  else if (strcmp(path, "/from-file/control") == 0 ||
-           strcmp(path, "/from-file0/control") == 0)
-  {
-    stbuf->st_mode = S_IFREG | 0644;
-    stbuf->st_nlink = 2;
-    stbuf->st_size = 0;
-    return 0;
-  }
   else if (has_prefix(path, "/from-file/"))
   {
-    //stbuf->st_mode = S_IFREG | 0444;
-    //stbuf->st_nlink = 2;
-    //stbuf->st_size = 0;
-    return -ENOENT;
-  }
-  else if (has_prefix(path, "/from-file0/"))
-  {
-    //stbuf->st_mode = S_IFREG | 0444;
-    //stbuf->st_nlink = 2;
-    //stbuf->st_size = 0;
-    return -ENOENT;
-  }
-  else if (has_prefix(path, "/by-glob/"))
-  {
-    std::string pattern = url_unquote(path + 9);
-
-    std::cout << "PATERN: '" << pattern << "'" << std::endl;
-
-    auto it = g_multi_files.end();
-#if 0
-      std::find_if(g_multi_files.begin(), g_multi_files.end(),
-                           [pattern](const MultiFilePtr& multi_file) {
-                             return multi_file->get_pattern() == pattern;
-                           });
-#endif
-
-    if (it == g_multi_files.end())
+    if (strcmp(path, "/from-file/control") == 0)
     {
-      std::vector<std::string> patterns{patterns};
-      auto multi_file = make_unique<MultiFile>(make_unique<GlobFileList>(patterns));
-
-      std::cout << "Making new multifile" << std::endl;
-
-      stbuf->st_mode = S_IFREG | 0444;
+      stbuf->st_mode = S_IFREG | 0644;
       stbuf->st_nlink = 2;
-      stbuf->st_size = multi_file->get_size();
-
-      g_multi_files.push_back(std::move(multi_file));
+      stbuf->st_size = 0;
+      return 0;
     }
     else
     {
-      stbuf->st_mode = S_IFREG | 0444;
-      stbuf->st_nlink = 2;
-      stbuf->st_size = (*it)->get_size();
-    }
+      std::string filename = path + strlen("/from-file/");
 
-    return 0;
+      auto it = g_from_file_multi_files.find(filename);
+      if (it == g_from_file_multi_files.end())
+      {
+        return -ENOENT;
+      }
+      else
+      {
+        stbuf->st_mode = S_IFREG | 0444;
+        stbuf->st_nlink = 2;
+        stbuf->st_size = it->second->get_size();
+        return 0;
+      }
+    }
   }
   else
   {
@@ -122,47 +91,32 @@ int concat_open(const char* path, struct fuse_file_info* fi)
 {
   std::cout << "open(" << path << ") " << fi->fh << std::endl;
 
-  if (strcmp(path, "/from-file/control") == 0)
+  if (has_prefix(path, "/from-file/"))
   {
-    g_from_file.push_back("");
-    fi->fh = g_from_file.size();
-    return 0;
-  }
-  else if (strcmp(path, "/from-file0/control") == 0)
-  {
-    g_from_file0.push_back("");
-    fi->fh = g_from_file0.size();
-    return 0;
-  }
-  else
-  {
-    return 0;
-  }
-}
-
-int concat_release(const char* path, struct fuse_file_info* fi)
-{
-  std::cout << "release(" << path << ") " << fi->fh << std::endl;
-  if (strcmp(path, "/from-file/control") == 0)
-  {
-    std::cout << "RECEIVED: " << g_from_file[fi->fh - 1] << std::endl;
-    return 0;
-  }
-  else if (strcmp(path, "/from-file0/control") == 0)
-  {
-    std::cout << "RECEIVED: " << g_from_file[fi->fh - 1] << std::endl;
-    return 0;
+    if (strcmp(path, "/from-file/control") == 0)
+    {
+      g_from_file_tmpbuf.push_back("");
+      fi->fh = g_from_file_tmpbuf.size();
+      return 0;
+    }
+    else
+    {
+      std::string filename = path + strlen("/from-file/");
+      auto it = g_from_file_multi_files.find(filename);
+      if (it == g_from_file_multi_files.end())
+      {
+        return -ENOENT;
+      }
+      else
+      {
+        return 0;
+      }
+    }
   }
   else
   {
     return 0;
   }
-}
-
-int concat_flush(const char* path, struct fuse_file_info*)
-{
-  std::cout << "flush(" << path << ")" << std::endl;
-  return 0;
 }
 
 int concat_read(const char* path, char* buf, size_t len, off_t offset,
@@ -170,26 +124,25 @@ int concat_read(const char* path, char* buf, size_t len, off_t offset,
 {
   std::cout << "read(" << path << ")" << std::endl;
 
-  if (has_prefix(path, "/by-glob/"))
+  if (has_prefix(path, "/from-file/"))
   {
-    std::string pattern = url_unquote(path + 9);
-
-#if 0
-    auto it = std::find_if(g_multi_files.begin(), g_multi_files.end(),
-                           [pattern](const MultiFilePtr& multi_file) {
-                             return multi_file->get_pattern() == pattern;
-                           });
-
-    if (it != g_multi_files.end())
+    if (strcmp(path, "/from-file/control") == 0)
     {
-      return static_cast<int>((*it)->read(static_cast<size_t>(offset), buf, len));
+      return -EPERM;
     }
     else
     {
-      return -ENOENT;
+      std::string filename = path + strlen("/from-file/");
+      auto it = g_from_file_multi_files.find(filename);
+      if (it != g_from_file_multi_files.end())
+      {
+        return static_cast<int>(it->second->read(static_cast<size_t>(offset), buf, len));
+      }
+      else
+      {
+        return 0;
+      }
     }
-#endif
-    return -ENOENT;
   }
   else
   {
@@ -204,20 +157,51 @@ int concat_write(const char* path, const char* buf, size_t len, off_t offset,
 
   if (strcmp(path, "/from-file/control") == 0)
   {
-    std::cout << "STUFF: " << g_from_file.size() << " " << std::endl;
+    std::cout << "STUFF: " << g_from_file_tmpbuf.size() << " " << std::endl;
     std::cout.write(buf, len);
     std::cout << std::endl;
-    g_from_file[fi->fh - 1].append(buf, len);
-    return static_cast<int>(len);
-  }
-  else if (strcmp(path, "/from-file0/control") == 0)
-  {
-    g_from_file0[fi->fh - 1].append(buf, len);
+    g_from_file_tmpbuf[fi->fh - 1].append(buf, len);
     return static_cast<int>(len);
   }
   else
   {
     return -ENOENT;
+  }
+}
+
+int concat_flush(const char* path, struct fuse_file_info*)
+{
+  // called multiple times in a single write
+  std::cout << "flush(" << path << ")" << std::endl;
+  return 0;
+}
+
+int concat_release(const char* path, struct fuse_file_info* fi)
+{
+  // called once for file close
+  std::cout << "release(" << path << ") " << fi->fh << std::endl;
+  if (strcmp(path, "/from-file/control") == 0)
+  {
+    const std::string& data = g_from_file_tmpbuf[fi->fh - 1];
+    std::string sha1 = sha1sum(data);
+
+    std::cout << "RECEIVED: " << sha1 << "\n" << data << std::endl;
+
+    auto it = g_from_file_multi_files.find(sha1);
+    if (it == g_from_file_multi_files.find(sha1))
+    {
+      g_from_file_multi_files[sha1] = make_unique<MultiFile>(make_unique<SimpleFileList>(split(data, '\n')));
+      return 0;
+    }
+    else
+    {
+      // do nothing, multifile is already there
+      return 0;
+    }
+  }
+  else
+  {
+    return 0;
   }
 }
 
@@ -236,24 +220,7 @@ int concat_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
   {
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
-    filler(buf, "by-glob", NULL, 0);
     filler(buf, "from-file", NULL, 0);
-    filler(buf, "from-file0", NULL, 0);
-    return 0;
-  }
-  else if (strcmp(path, "/by-glob") == 0)
-  {
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-
-#if 0
-      // FIXME: broken
-      for(const auto& multi_file : g_multi_files)
-      {
-        filler(buf, url_quote(multi_file->get_pattern()).c_str(), NULL, 0);
-      }
-#endif
-
     return 0;
   }
   else if (strcmp(path, "/from-file") == 0)
@@ -261,13 +228,10 @@ int concat_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
     filler(buf, "control", NULL, 0);
-    return 0;
-  }
-  else if (strcmp(path, "/from-file0") == 0)
-  {
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-    filler(buf, "control", NULL, 0);
+    for(const auto& it : g_from_file_multi_files)
+    {
+      filler(buf, it.first.c_str(), NULL, 0);
+    }
     return 0;
   }
   else

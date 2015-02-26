@@ -118,6 +118,11 @@ bool has_prefix(const char* text, const char* prefix)
   }
 }
 
+std::string sha1sum(const std::string& data)
+{
+  return sha1sum(data.data(), data.size());
+}
+
 std::string sha1sum(const char* data, size_t len)
 {
   MHASH td = mhash_init(MHASH_SHA1);

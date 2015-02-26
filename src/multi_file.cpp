@@ -36,6 +36,12 @@ MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
   m_file_list(std::move(file_list)),
   m_files()
 {
+  refresh();
+}
+
+void
+MultiFile::refresh()
+{
   m_files = m_file_list->scan();
 }
 
