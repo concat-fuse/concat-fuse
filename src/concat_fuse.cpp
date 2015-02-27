@@ -18,7 +18,6 @@
 
 #include <algorithm>
 #include <fuse.h>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <string.h>

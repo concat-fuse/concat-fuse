@@ -20,7 +20,6 @@
 #include <assert.h>
 #include <fcntl.h>
 #include <iomanip>
-#include <iostream>
 #include <mhash.h>
 #include <sstream>
 #include <string.h>
