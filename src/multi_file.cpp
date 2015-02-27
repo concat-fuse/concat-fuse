@@ -32,6 +32,7 @@
 
 MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
   m_pos(0),
+  m_mtime(),
   m_file_list(std::move(file_list)),
   m_files()
 {
@@ -42,6 +43,7 @@ void
 MultiFile::refresh()
 {
   m_files = m_file_list->scan();
+  clock_gettime(CLOCK_REALTIME, &m_mtime);
 }
 
 size_t
@@ -53,6 +55,12 @@ MultiFile::get_size() const
     total += file.size;
   }
   return total;
+}
+
+struct timespec
+MultiFile::get_mtime() const
+{
+  return m_mtime;
 }
 
 int

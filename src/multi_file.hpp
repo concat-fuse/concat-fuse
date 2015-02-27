@@ -28,6 +28,7 @@ class MultiFile
 {
 private:
   size_t m_pos;
+  struct timespec m_mtime;
 
   std::unique_ptr<FileList> m_file_list;
   std::vector<FileInfo> m_files;
@@ -37,6 +38,7 @@ public:
 
   ssize_t read(size_t pos, char* buf, size_t count);
   size_t get_size() const;
+  struct timespec get_mtime() const;
   void refresh();
 
 private:
