@@ -23,12 +23,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+#include <mutex>
 
 #include "multi_file.hpp"
 
 class ConcatVFS
 {
 private:
+  std::mutex m_mutex;
+
   std::vector<std::string> m_from_file0_tmpbuf;
   std::map<std::string, std::unique_ptr<MultiFile> > m_from_file0_multi_files;
 

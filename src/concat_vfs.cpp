@@ -27,6 +27,7 @@
 #include "util.hpp"
 
 ConcatVFS::ConcatVFS() :
+  m_mutex(),
   m_from_file0_tmpbuf(),
   m_from_file0_multi_files(),
   m_from_glob0_tmpbuf(),
@@ -36,6 +37,8 @@ ConcatVFS::ConcatVFS() :
 int
 ConcatVFS::getattr(const char* path, struct stat* stbuf)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
   log_debug("getattr({})", path);
 
   memset(stbuf, 0, sizeof(*stbuf));
@@ -114,6 +117,7 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
 int
 ConcatVFS::utimens(const char* path, const struct timespec tv[2])
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("utimens({})", path);
   return -ENOENT;
 }
@@ -121,6 +125,7 @@ ConcatVFS::utimens(const char* path, const struct timespec tv[2])
 int
 ConcatVFS::open(const char* path, struct fuse_file_info* fi)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("open({}, {})", path, fi->fh);
 
   if (has_prefix(path, "/from-file0/"))
@@ -177,6 +182,7 @@ int
 ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info*)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("read({})", path);
 
   if (has_prefix(path, "/from-file0/"))
@@ -228,6 +234,7 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
 int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset,
                      struct fuse_file_info* fi)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("write({}) -> {}", path, fi->fh);
 
   if (strcmp(path, "/from-file0/control") == 0)
@@ -248,6 +255,7 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
 
 int ConcatVFS::flush(const char* path, struct fuse_file_info*)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   // called multiple times in a single write
   log_debug("flush({})", path);
   return 0;
@@ -256,6 +264,7 @@ int ConcatVFS::flush(const char* path, struct fuse_file_info*)
 int
 ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   // called once for file close
   log_debug("release({}) -> {}", path, fi->fh);
 
@@ -264,7 +273,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
     const std::string& data = m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
     std::string sha1 = sha1sum(data);
 
-    log_debug("RECEIVED: {}\n{}", sha1, data);
+    log_debug("RECEIVED: {}", sha1);
 
     auto it = m_from_file0_multi_files.find(sha1);
     if (it == m_from_file0_multi_files.find(sha1))
@@ -283,7 +292,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
     const std::string& data = m_from_glob0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
     std::string sha1 = sha1sum(data);
 
-    log_debug("RECEIVED: {}\n{}", sha1, data);
+    log_debug("RECEIVED: {}", sha1);
 
     auto it = m_from_glob0_multi_files.find(sha1);
     if (it == m_from_glob0_multi_files.find(sha1))
@@ -306,6 +315,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 int
 ConcatVFS::opendir(const char* path, struct fuse_file_info*)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("opendir({})", path);
   return 0;
 }
@@ -314,6 +324,7 @@ int
 ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
                    struct fuse_file_info* fi)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("readdir({})", path);
 
   if (strcmp(path, "/") == 0)
@@ -355,6 +366,7 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
 int
 ConcatVFS::releasedir(const char* path, struct fuse_file_info* fi)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("releasedir({}, {})", path, fi->fh);
   return 0;
 }
@@ -362,6 +374,7 @@ ConcatVFS::releasedir(const char* path, struct fuse_file_info* fi)
 int
 ConcatVFS::truncate(const char* path, off_t offset)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   // this is called before write and required
   log_debug("releasedir({}, {})", path, offset);
   return 0;
