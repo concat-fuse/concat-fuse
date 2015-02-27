@@ -71,6 +71,19 @@ class ConcatFuse:
         virtual_file = os.path.join(self.basedir, "from-file0", multifile_id)
         return virtual_file
 
+    def glob(self, globs):
+        """Send the glob list to concat-fuse and return the filename of the virtual file"""
+
+        # write the file list to concat-fuse
+        globs_serialized = "\0".join(globs)
+        with open(os.path.join(self.basedir, "from-glob0/control"), "wb") as fout:
+            fout.write(globs_serialized)
+
+        # return the virtual file name
+        multifile_id = hashlib.sha1(globs_serialized).hexdigest()
+        virtual_file = os.path.join(self.basedir, "from-glob0", multifile_id)
+        return virtual_file
+
 
 def splitlines0(data):
     lst = data.split("\0")
@@ -90,13 +103,18 @@ def main():
     concat_fuse_group = parser.add_argument_group("concat-fuse options")
     concat_fuse_group.add_argument('-u', '--unmount', action='store_true', help="Unmount concat-fuse")
 
-    files_group = parser.add_argument_group("file options")
+    files_group = parser.add_argument_group("file options", "Options for static file lists.")
     files_group.add_argument('-n', '--dry-run', action='store_true', help="Don't send file list to concat-fuse, print to stdout")
     files_group.add_argument('-k', '--keep', action='store_true', help="Continue despite errors")
     files_group.add_argument('FILES', nargs='*', help="Files to virtually concat")
     files_group.add_argument('--from-file', metavar='FILE', action='append', default=[], help="Read files from FILE, newline separated")
     files_group.add_argument('--from-file0', metavar='FILE', action='append', default=[], help="Read files from FILE, '\\0' separated")
-    # files_group.add_argument('--glob', metavar='GLOB', help="Read files from FILE, '\\0' separated")
+
+    files_group = parser.add_argument_group("glob options",
+                                            ("Glob pattern act as dynamic file lists and the underlying virtual "
+                                            "file can be dynamically updated when new files arrive."))
+
+    files_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[], help="Use glob")
 
     stdin_group = files_group.add_mutually_exclusive_group()
     stdin_group.add_argument('-', dest="stdin", action='store_true', help="Read files from stdin")
@@ -127,6 +145,15 @@ def main():
 
         files = [os.path.abspath(f) for f in files]
 
+        # generate glob list
+        globs = []
+        globs.extend(args.glob)
+        globs = [os.path.abspath(g) for g in globs]
+
+        if globs and files:
+            print("Can't mix globs and regular files", file=sys.stderr)
+            sys.exit(1)
+
         errors = False
         for f in files:
             if not os.path.exists(f):
@@ -136,10 +163,7 @@ def main():
         if errors and not args.keep:
             sys.exit(1)
 
-        if not files:
-            print("%s: fatal error: no input files provided" % sys.argv[0], file=sys.stderr)
-            sys.exit(1)
-        else:
+        if files:
             if args.dry_run:
                 for f in files:
                     print(f)
@@ -147,6 +171,17 @@ def main():
                 concat_fuse = ConcatFuse()
                 virtual_filename = concat_fuse.concat(files)
                 print(virtual_filename)
+        elif globs:
+            if args.dry_run:
+                for g in globs:
+                    print(g)
+            else:
+                concat_fuse = ConcatFuse()
+                virtual_filename = concat_fuse.glob(globs)
+                print(virtual_filename)
+        else:
+            print("%s: fatal error: no input files provided" % sys.argv[0], file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":

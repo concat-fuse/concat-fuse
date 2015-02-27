@@ -40,7 +40,7 @@ TEST(FormatTest, format)
   ASSERT_EQ(format_str("{{ {} }}", 9123), "{ 9123 }");
   ASSERT_EQ(format_str("{{"), "{");
   ASSERT_EQ(format_str("}}"), "}");
-  
+
   ASSERT_THROW(format_str("{"), std::invalid_argument);
   ASSERT_THROW(format_str("}"), std::invalid_argument);
   ASSERT_THROW(format_str("{foobar}"), std::invalid_argument);

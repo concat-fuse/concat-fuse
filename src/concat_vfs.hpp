@@ -29,9 +29,11 @@
 class ConcatVFS
 {
 private:
-  std::vector<std::unique_ptr<MultiFile> > m_multi_files;
   std::vector<std::string> m_from_file0_tmpbuf;
   std::map<std::string, std::unique_ptr<MultiFile> > m_from_file0_multi_files;
+
+  std::vector<std::string> m_from_glob0_tmpbuf;
+  std::map<std::string, std::unique_ptr<MultiFile> > m_from_glob0_multi_files;
 
 public:
   ConcatVFS();

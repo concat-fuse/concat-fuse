@@ -27,9 +27,10 @@
 #include "util.hpp"
 
 ConcatVFS::ConcatVFS() :
-  m_multi_files(),
   m_from_file0_tmpbuf(),
-  m_from_file0_multi_files()
+  m_from_file0_multi_files(),
+  m_from_glob0_tmpbuf(),
+  m_from_glob0_multi_files()
 {}
 
 int
@@ -41,9 +42,10 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
 
   stbuf->st_uid = fuse_get_context()->uid;
   stbuf->st_gid = fuse_get_context()->gid;
-  
+
   if (strcmp(path, "/") == 0 ||
-      strcmp(path, "/from-file0") == 0)
+      strcmp(path, "/from-file0") == 0 ||
+      strcmp(path, "/from-glob0") == 0)
   {
     stbuf->st_mode = S_IFDIR | 0755;
     stbuf->st_nlink = 2;
@@ -64,6 +66,33 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
 
       auto it = m_from_file0_multi_files.find(filename);
       if (it == m_from_file0_multi_files.end())
+      {
+        return -ENOENT;
+      }
+      else
+      {
+        stbuf->st_mode = S_IFREG | 0444;
+        stbuf->st_nlink = 2;
+        stbuf->st_size = it->second->get_size();
+        return 0;
+      }
+    }
+  }
+  else if (has_prefix(path, "/from-glob0/"))
+  {
+    if (strcmp(path, "/from-glob0/control") == 0)
+    {
+      stbuf->st_mode = S_IFREG | 0644;
+      stbuf->st_nlink = 2;
+      stbuf->st_size = 0;
+      return 0;
+    }
+    else
+    {
+      std::string filename = path + strlen("/from-glob0/");
+
+      auto it = m_from_glob0_multi_files.find(filename);
+      if (it == m_from_glob0_multi_files.end())
       {
         return -ENOENT;
       }
@@ -116,6 +145,28 @@ ConcatVFS::open(const char* path, struct fuse_file_info* fi)
       }
     }
   }
+  else if (has_prefix(path, "/from-glob0/"))
+  {
+    if (strcmp(path, "/from-glob0/control") == 0)
+    {
+      m_from_glob0_tmpbuf.push_back("");
+      fi->fh = m_from_glob0_tmpbuf.size();
+      return 0;
+    }
+    else
+    {
+      std::string filename = path + strlen("/from-glob0/");
+      auto it = m_from_glob0_multi_files.find(filename);
+      if (it == m_from_glob0_multi_files.end())
+      {
+        return -ENOENT;
+      }
+      else
+      {
+        return 0;
+      }
+    }
+  }
   else
   {
     return 0;
@@ -148,6 +199,26 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
       }
     }
   }
+  else if (has_prefix(path, "/from-glob0/"))
+  {
+    if (strcmp(path, "/from-glob0/control") == 0)
+    {
+      return -EPERM;
+    }
+    else
+    {
+      std::string filename = path + strlen("/from-glob0/");
+      auto it = m_from_glob0_multi_files.find(filename);
+      if (it != m_from_glob0_multi_files.end())
+      {
+        return static_cast<int>(it->second->read(static_cast<size_t>(offset), buf, len));
+      }
+      else
+      {
+        return 0;
+      }
+    }
+  }
   else
   {
     return -ENOENT;
@@ -162,6 +233,11 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
   if (strcmp(path, "/from-file0/control") == 0)
   {
     m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)].append(buf, len);
+    return static_cast<int>(len);
+  }
+  else if (strcmp(path, "/from-glob0/control") == 0)
+  {
+    m_from_glob0_tmpbuf[static_cast<size_t>(fi->fh - 1)].append(buf, len);
     return static_cast<int>(len);
   }
   else
@@ -202,6 +278,25 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
       return 0;
     }
   }
+  else if (strcmp(path, "/from-glob0/control") == 0)
+  {
+    const std::string& data = m_from_glob0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
+    std::string sha1 = sha1sum(data);
+
+    log_debug("RECEIVED: {}\n{}", sha1, data);
+
+    auto it = m_from_glob0_multi_files.find(sha1);
+    if (it == m_from_glob0_multi_files.find(sha1))
+    {
+      m_from_glob0_multi_files[sha1] = make_unique<MultiFile>(make_unique<GlobFileList>(split(data, '\0')));
+      return 0;
+    }
+    else
+    {
+      // do nothing, multifile is already there
+      return 0;
+    }
+  }
   else
   {
     return 0;
@@ -226,6 +321,7 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
     filler(buf, "from-file0", NULL, 0);
+    filler(buf, "from-glob0", NULL, 0);
     return 0;
   }
   else if (strcmp(path, "/from-file0") == 0)
@@ -234,6 +330,17 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
     filler(buf, "..", NULL, 0);
     filler(buf, "control", NULL, 0);
     for(const auto& it : m_from_file0_multi_files)
+    {
+      filler(buf, it.first.c_str(), NULL, 0);
+    }
+    return 0;
+  }
+  else if (strcmp(path, "/from-glob0") == 0)
+  {
+    filler(buf, ".", NULL, 0);
+    filler(buf, "..", NULL, 0);
+    filler(buf, "control", NULL, 0);
+    for(const auto& it : m_from_glob0_multi_files)
     {
       filler(buf, it.first.c_str(), NULL, 0);
     }
