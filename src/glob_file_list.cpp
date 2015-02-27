@@ -37,7 +37,7 @@ GlobFileList::scan() const
     int ret = glob(pattern.c_str(), 0, NULL, &glob_data);
     if (ret == GLOB_NOMATCH)
     {
-      log_debug("concat.so: no matching files found for pattern: %s\n", pattern.c_str());
+      log_debug("concat.so: no matching files found for pattern: {}", pattern);
     }
     else
     {

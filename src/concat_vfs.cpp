@@ -35,7 +35,7 @@ ConcatVFS::ConcatVFS() :
 int
 ConcatVFS::getattr(const char* path, struct stat* stbuf)
 {
-  log_debug("getattr(%s)\n", path);
+  log_debug("getattr({})", path);
 
   memset(stbuf, 0, sizeof(*stbuf));
 
@@ -85,14 +85,14 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
 int
 ConcatVFS::utimens(const char* path, const struct timespec tv[2])
 {
-  log_debug("utimens(%s)\n", path);
+  log_debug("utimens({})", path);
   return -ENOENT;
 }
 
 int
 ConcatVFS::open(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("open(%s, %" PRIu64 ")\n", path, fi->fh);
+  log_debug("open({}, {})", path, fi->fh);
 
   if (has_prefix(path, "/from-file0/"))
   {
@@ -126,7 +126,7 @@ int
 ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info*)
 {
-  log_debug("read(%s)\n", path);
+  log_debug("read({})", path);
 
   if (has_prefix(path, "/from-file0/"))
   {
@@ -157,15 +157,10 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
 int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset,
                      struct fuse_file_info* fi)
 {
-  log_debug("write(%s) -> %" PRId64 "\n", path, fi->fh);
+  log_debug("write({}) -> {}", path, fi->fh);
 
   if (strcmp(path, "/from-file0/control") == 0)
   {
-#if 0
-    std::cout << "STUFF: " << m_from_file0_tmpbuf.size() << " " << std::endl;
-    std::cout.write(buf, len);
-    std::cout << std::endl;
-#endif
     m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)].append(buf, len);
     return static_cast<int>(len);
   }
@@ -178,7 +173,7 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
 int ConcatVFS::flush(const char* path, struct fuse_file_info*)
 {
   // called multiple times in a single write
-  log_debug("flush(%s)\n", path);
+  log_debug("flush({})", path);
   return 0;
 }
 
@@ -186,16 +181,14 @@ int
 ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 {
   // called once for file close
-  log_debug("release(%s) -> %" PRId64 "\n", path, fi->fh);
+  log_debug("release({}) -> {}", path, fi->fh);
 
   if (strcmp(path, "/from-file0/control") == 0)
   {
     const std::string& data = m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
     std::string sha1 = sha1sum(data);
 
-#if 0
-    std::cout << "RECEIVED: " << sha1 << "\n" << data << std::endl;
-#endif
+    log_debug("RECEIVED: {}\n{}", sha1, data);
 
     auto it = m_from_file0_multi_files.find(sha1);
     if (it == m_from_file0_multi_files.find(sha1))
@@ -218,7 +211,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 int
 ConcatVFS::opendir(const char* path, struct fuse_file_info*)
 {
-  log_debug("opendir(%s)\n", path);
+  log_debug("opendir({})", path);
   return 0;
 }
 
@@ -226,7 +219,7 @@ int
 ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
                    struct fuse_file_info* fi)
 {
-  log_debug("readdir(%s)\n", path);
+  log_debug("readdir({})", path);
 
   if (strcmp(path, "/") == 0)
   {
@@ -255,7 +248,7 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
 int
 ConcatVFS::releasedir(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("releasedir(%s, %" PRId64 ")\n", path, fi->fh);
+  log_debug("releasedir({}, {})", path, fi->fh);
   return 0;
 }
 
@@ -263,7 +256,7 @@ int
 ConcatVFS::truncate(const char* path, off_t offset)
 {
   // this is called before write and required
-  log_debug("releasedir(%s, %zd)\n", path, offset);
+  log_debug("releasedir({}, {})", path, offset);
   return 0;
 }
 

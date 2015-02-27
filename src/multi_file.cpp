@@ -16,7 +16,6 @@
 
 #include "multi_file.hpp"
 
-#include <assert.h>
 #include <ctype.h>
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -76,17 +75,17 @@ MultiFile::find_file(size_t* offset)
 ssize_t
 MultiFile::read(size_t pos, char* buf, size_t count)
 {
-  log_debug("magicfile_read(%zu, %p, %zu)\n", pos, buf, count);
+  log_debug("magicfile_read({}, {}, {})", pos, buf, count);
 
   size_t total_count = 0;
   while(count != 0)
   {
     size_t offset = pos;
     int idx = find_file(&offset);
-    log_debug("found file: %zu %d %zu %zu\n", pos, idx, offset, count);
+    log_debug("found file: {} {} {} {}", pos, idx, offset, count);
     if (idx < 0)
     {
-      log_debug("EOF reached\n");
+      log_debug("EOF reached");
       return total_count;
     }
     else
@@ -104,7 +103,7 @@ MultiFile::read(size_t pos, char* buf, size_t count)
       total_count += read_count;
     }
   }
-  log_debug("count = %zu\n", count);
+  log_debug("count = {}", count);
   return total_count;
 }
 

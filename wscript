@@ -59,6 +59,8 @@ def configure(conf):
 
     if conf.options.developer:
         conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
+    else:
+        conf.env.append_value('DEFINES_WARNINGS', ["NDEBUG"])
 
     conf.env.build_tests = conf.options.build_tests
 

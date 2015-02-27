@@ -21,8 +21,13 @@
 #include <vector>
 #include <memory>
 
-#define log_debug(...) fprintf(stderr, "[DEBUG] " __VA_ARGS__)
-//#define log_debug(...)
+#include "format.hpp"
+
+#ifdef NDEBUG
+#  define log_debug(...)
+#else
+#  define log_debug(...) do{ format(std::cerr, "[DEBUG] " __VA_ARGS__); std::endl(std::cerr); } while(0)
+#endif
 
 bool is_hex(char c);
 int hex2int(char c);

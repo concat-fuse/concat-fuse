@@ -17,7 +17,6 @@
 #include "util.hpp"
 
 #include <array>
-#include <assert.h>
 #include <fcntl.h>
 #include <iomanip>
 #include <mhash.h>
