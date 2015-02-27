@@ -77,6 +77,8 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
         stbuf->st_mode = S_IFREG | 0444;
         stbuf->st_nlink = 2;
         stbuf->st_size = it->second->get_size();
+        stbuf->st_mtim = it->second->get_mtime();
+
         return 0;
       }
     }
@@ -104,6 +106,7 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
         stbuf->st_mode = S_IFREG | 0444;
         stbuf->st_nlink = 2;
         stbuf->st_size = it->second->get_size();
+        stbuf->st_mtim = it->second->get_mtime();
         return 0;
       }
     }
@@ -119,7 +122,39 @@ ConcatVFS::utimens(const char* path, const struct timespec tv[2])
 {
   std::lock_guard<std::mutex> lock(m_mutex);
   log_debug("utimens({})", path);
-  return -ENOENT;
+
+  if (has_prefix(path, "/from-file0/"))
+  {
+    std::string filename = path + strlen("/from-file0/");
+    auto it = m_from_file0_multi_files.find(filename);
+    if (it == m_from_file0_multi_files.end())
+    {
+      return -ENOENT;
+    }
+    else
+    {
+      it->second->refresh();
+      return 0;
+    }
+  }
+  else if (has_prefix(path, "/from-glob0/"))
+  {
+    std::string filename = path + strlen("/from-glob0/");
+    auto it = m_from_glob0_multi_files.find(filename);
+    if (it == m_from_glob0_multi_files.end())
+    {
+      return -ENOENT;
+    }
+    else
+    {
+      it->second->refresh();
+      return 0;
+    }
+  }
+  else
+  {
+    return -ENOSYS;
+  }
 }
 
 int
@@ -276,7 +311,7 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
     log_debug("RECEIVED: {}", sha1);
 
     auto it = m_from_file0_multi_files.find(sha1);
-    if (it == m_from_file0_multi_files.find(sha1))
+    if (it == m_from_file0_multi_files.end())
     {
       m_from_file0_multi_files[sha1] = make_unique<MultiFile>(make_unique<SimpleFileList>(split(data, '\0')));
       return 0;
@@ -295,14 +330,14 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
     log_debug("RECEIVED: {}", sha1);
 
     auto it = m_from_glob0_multi_files.find(sha1);
-    if (it == m_from_glob0_multi_files.find(sha1))
+    if (it == m_from_glob0_multi_files.end())
     {
       m_from_glob0_multi_files[sha1] = make_unique<MultiFile>(make_unique<GlobFileList>(split(data, '\0')));
       return 0;
     }
     else
     {
-      // do nothing, multifile is already there
+      it->second->refresh();
       return 0;
     }
   }
