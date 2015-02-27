@@ -166,24 +166,16 @@ std::vector<std::string> split(const std::string& str, char c)
 
 size_t get_file_size(const std::string& filename)
 {
-  int fd = open(filename.c_str(), O_RDONLY);
-  if (fd < 0)
+  struct stat buf;
+  int ret = stat(filename.c_str(), &buf);
+  if (ret < 0)
   {
-    perror(filename.c_str());
+    log_debug("{}: stat() failed: ", filename, strerror(errno));
     return 0;
   }
   else
   {
-    off_t ret = lseek(fd, 0, SEEK_END);
-    close(fd);
-    if (ret < 0)
-    {
-      return 0;
-    }
-    else
-    {
-      return static_cast<size_t>(ret);
-    }
+    return buf.st_size;
   }
 }
 
