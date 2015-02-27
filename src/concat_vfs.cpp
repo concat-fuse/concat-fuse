@@ -17,6 +17,7 @@
 #include "concat_vfs.hpp"
 
 #include <inttypes.h>
+#include <stdint.h>
 #include <map>
 #include <stdint.h>
 #include <string.h>
@@ -25,6 +26,29 @@
 #include "glob_file_list.hpp"
 #include "multi_file.hpp"
 #include "util.hpp"
+
+namespace {
+
+enum class FileHandleType { FILE0_CONTROL_TYPE = 1<<0, GLOB0_CONTROL_TYPE = 1<<2 };
+
+size_t fh2idx(uint64_t handle)
+{
+  return static_cast<size_t>(handle & UINT64_C(0x00ffffffffffffff)) - 1;
+}
+
+/*
+bool is_fh_type(uint64_t handle, FileHandleType t)
+{
+  return handle & (static_cast<uint64_t>(t) << 61);
+}
+*/
+
+uint64_t make_fh(FileHandleType t, size_t v)
+{
+  return (static_cast<uint64_t>(t) << 61) | static_cast<uint64_t>(v);
+}
+
+} // namespace
 
 ConcatVFS::ConcatVFS() :
   m_mutex(),
@@ -78,7 +102,6 @@ ConcatVFS::getattr(const char* path, struct stat* stbuf)
         stbuf->st_nlink = 2;
         stbuf->st_size = it->second->get_size();
         stbuf->st_mtim = it->second->get_mtime();
-
         return 0;
       }
     }
@@ -167,8 +190,10 @@ ConcatVFS::open(const char* path, struct fuse_file_info* fi)
   {
     if (strcmp(path, "/from-file0/control") == 0)
     {
+      fi->direct_io = 1;
+
       m_from_file0_tmpbuf.push_back("");
-      fi->fh = m_from_file0_tmpbuf.size();
+      fi->fh = make_fh(FileHandleType::FILE0_CONTROL_TYPE, m_from_file0_tmpbuf.size());
       return 0;
     }
     else
@@ -189,8 +214,10 @@ ConcatVFS::open(const char* path, struct fuse_file_info* fi)
   {
     if (strcmp(path, "/from-glob0/control") == 0)
     {
+      fi->direct_io = 1;
+
       m_from_glob0_tmpbuf.push_back("");
-      fi->fh = m_from_glob0_tmpbuf.size();
+      fi->fh = make_fh(FileHandleType::GLOB0_CONTROL_TYPE, m_from_glob0_tmpbuf.size());
       return 0;
     }
     else
@@ -215,10 +242,10 @@ ConcatVFS::open(const char* path, struct fuse_file_info* fi)
 
 int
 ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
-                struct fuse_file_info*)
+                struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("read({})", path);
+  log_debug("read({}, {}, {}, {}, {})", path, static_cast<void*>(buf), len, offset, fi);
 
   if (has_prefix(path, "/from-file0/"))
   {
@@ -274,12 +301,12 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
 
   if (strcmp(path, "/from-file0/control") == 0)
   {
-    m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)].append(buf, len);
+    m_from_file0_tmpbuf[fh2idx(fi->fh)].append(buf, len);
     return static_cast<int>(len);
   }
   else if (strcmp(path, "/from-glob0/control") == 0)
   {
-    m_from_glob0_tmpbuf[static_cast<size_t>(fi->fh - 1)].append(buf, len);
+    m_from_glob0_tmpbuf[fh2idx(fi->fh)].append(buf, len);
     return static_cast<int>(len);
   }
   else
