@@ -30,8 +30,10 @@ import sys
 class ConcatFuse:
 
     @staticmethod
-    def unmount():
-        basedir = ConcatFuse.find_basedir()
+    def unmount(basedir=None):
+        if basedir is None:
+            basedir = ConcatFuse.find_basedir()
+
         if os.path.ismount(basedir):
             subprocess.check_call(["fusermount", "-u", basedir])
 
@@ -102,6 +104,8 @@ def main():
 
     concat_fuse_group = parser.add_argument_group("concat-fuse options")
     concat_fuse_group.add_argument('-u', '--unmount', action='store_true', help="Unmount concat-fuse")
+    concat_fuse_group.add_argument('-m', '--mountpoint', metavar="MOUNTPOINT", type=str, default=None,
+                                   help="Use MOUNTPOINT instead of default")
 
     files_group = parser.add_argument_group("file options", "Options for static file lists.")
     files_group.add_argument('-n', '--dry-run', action='store_true', help="Don't send file list to concat-fuse, print to stdout")
@@ -123,7 +127,7 @@ def main():
     args = parser.parse_args()
 
     if args.unmount:
-        ConcatFuse.unmount()
+        ConcatFuse.unmount(args.mountpoint)
     else:
         # generate the file list
         files = []
@@ -168,7 +172,7 @@ def main():
                 for f in files:
                     print(f)
             else:
-                concat_fuse = ConcatFuse()
+                concat_fuse = ConcatFuse(args.mountpoint)
                 virtual_filename = concat_fuse.concat(files)
                 print(virtual_filename)
         elif globs:
@@ -176,7 +180,7 @@ def main():
                 for g in globs:
                     print(g)
             else:
-                concat_fuse = ConcatFuse()
+                concat_fuse = ConcatFuse(args.mountpoint)
                 virtual_filename = concat_fuse.glob(globs)
                 print(virtual_filename)
         else:
