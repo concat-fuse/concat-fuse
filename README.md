@@ -48,41 +48,8 @@ magic behind the scene, usage is thus very simple:
 
     $ echo "File Number One" > /tmp/1.txt
     $ echo "File Number Two" > /tmp/2.txt
-    $ cat $(vcat "/tmp/*.txt")
+    $ cat $(vcat /tmp/*.txt)
     File Number One
     File Number Two
 
-Don't forget to quote the glob pattern when passing to `vcat`.
-
-
-Behind the scenes
------------------
-
-The following example should give an rough idea of how `concat-fuse`
-works. First lets create some test files that we later want to join:
-
-    $ echo "File Number One" > /tmp/1.txt
-    $ echo "File Number Two" > /tmp/2.txt
-
-Then we create a directory for `concat-fuse` and mount it:
-
-    $ mkdir /tmp/concat
-    $ build/concat-fuse /tmp/concat
-
-Finally we list the virtual file with `ls` and print it with `cat`:
-
-    $ ls -l $(build/concat-pattern /tmp/concat "/tmp/*.txt")
-    -r--r--r-- 2 root root 32 Jan  1  1970 /tmp/concat/by-glob/%2ftmp%2f%2a%2etxt
-    $ cat $(build/concat-pattern /tmp/concat "/tmp/*.txt")
-    File Number One
-    File Number Two
-
-The job of `concat-pattern` in this example is to translate the
-pattern `/tmp/*.txt` into the name of the virtual file
-`/tmp/concat/by-glob/%2ftmp%2f%2a%2etxt`.
-
-The pattern is simply
-[URL encoded](http://en.wikipedia.org/wiki/Percent-encoding) and then
-looked up in the `by-glob/` directory. Accessing files in the
-`by-glob/` directory will trigger the creation of the virtual file and
-collect the neccessary information.
+The man pages for `concat-fuse` and `vcat` provide further information.
