@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH "vcat " 1 "24 February 2015" 0.1.0 "User Commands"
+.TH "vcat " 1 "27 February 2015" 0.1.0 "User Commands"
 .SH NAME
 vcat
 \- Access groups of files as if they were a single large file 
@@ -24,26 +24,32 @@ vcat
 \fBvcat\fR is a wrapper around
 \fBconcat-fuse\fR that allows accessing groups of
 files, selected by a glob pattern, as if they were a single
-large file.
-.PP
-\fBvcat\fR works by mounting the virtual filesystem
+large file. It works by mounting the virtual filesystem
 \fBconcat-fuse\fR and then accessing a file within
 it that acts as if it contained all the individual files
 concatenated.
+.PP
+\fBvcat\fR is especially useful for doing gapless
+playback of video files (when the video format allows it) or for
+accessing archive files that have been `split` into multiple
+parts and where a temporary file would be to slow, large and
+cumbersome to deal with.
 .SH EXAMPLE
 A simple example of \fBvcat\fR use would look like this:
 .PP
 .nf
 \*(T<$ echo "File Number One" > /tmp/1.txt
 $ echo "File Number Two" > /tmp/2.txt
-$ cat $(vcat "/tmp/*.txt")
+$ cat $(vcat /tmp/*.txt)
 File Number One
 File Number Two\*(T>
 .fi
 .PP
-Note that the glob pattern must be quoted for it to work.
-.SH BUGS
-\fBvcat\fR will only accept a single glob pattern
-per call and doesn't provide a way to reorder them.
+Once done with the virtual file the virtual filesystem can be
+unmounted with:
+.PP
+.nf
+\*(T<$ vcat \-u\*(T>
+.fi
 .SH "SEE ALSO"
 \fBconcat-fuse\fR(1),

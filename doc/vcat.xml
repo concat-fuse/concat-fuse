@@ -40,13 +40,17 @@
       <command>vcat</command> is a wrapper around
       <command>concat-fuse</command> that allows accessing groups of
       files, selected by a glob pattern, as if they were a single
-      large file.
-    </para>
-    <para>
-      <command>vcat</command> works by mounting the virtual filesystem
+      large file. It works by mounting the virtual filesystem
       <command>concat-fuse</command> and then accessing a file within
       it that acts as if it contained all the individual files
       concatenated.
+    </para>
+    <para>
+      <command>vcat</command> is especially useful for doing gapless
+      playback of video files (when the video format allows it) or for
+      accessing archive files that have been `split` into multiple
+      parts and where a temporary file would be to slow, large and
+      cumbersome to deal with.
     </para>
   </refsect1>
   <refsect1>
@@ -56,21 +60,15 @@
     </para>
     <programlisting><![CDATA[$ echo "File Number One" > /tmp/1.txt
 $ echo "File Number Two" > /tmp/2.txt
-$ cat $(vcat "/tmp/*.txt")
+$ cat $(vcat /tmp/*.txt)
 File Number One
 File Number Two]]></programlisting>
 
     <para>
-      Note that the glob pattern must be quoted for it to work.
+      Once done with the virtual file the virtual filesystem can be
+      unmounted with:
     </para>
-  </refsect1>
-
-  <refsect1>
-    <title>Bugs</title>
-    <para>
-      <command>vcat</command> will only accept a single glob pattern
-      per call and doesn't provide a way to reorder them.
-    </para>
+    <programlisting><![CDATA[$ vcat -u]]></programlisting>
   </refsect1>
 
   <refsect1>

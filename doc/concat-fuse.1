@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH "concat-fuse " 1 "24 February 2015" 0.1.0 "User Commands"
+.TH "concat-fuse " 1 "27 February 2015" 0.1.0 "User Commands"
 .SH NAME
 concat-fuse
 \- A virtual filesystem that allows access of groups of files as if they were a single large one 
@@ -22,20 +22,18 @@ concat-fuse
 'hy
 .SH DESCRIPTION
 \fBconcat-fuse\fR is a FUSE based filesystem that
-allows accessing groups of files, selected by a glob pattern, as
-if they were a single large file. In most cases direct
-interaction with \fBconcat-fuse\fR isn't needed, as
-the convinience tool \fBvcat\fR hides the plumbing
-away.
+allows accessing groups of files as if they were a single large
+file. In most cases direct interaction with
+\fBconcat-fuse\fR isn't needed, as the convinience
+tool \fBvcat\fR hides the plumbing away.
 .SH STRUCTURE
-The filesystem, once mounted, provides a single subdirectory
-named \*(T<\fIby\-glob/\fR\*(T>. Accessing non-existing
-files in that directory will create a virtual files that will
-act as if it contained the concatenated data of the individual
-files. The individual files will be aquired by interpreting the
-filename as a glob pattern.
-.PP
-The glob pattern itself has to be provided in URL encoded
-manner, meaning "/" replaced with "%2f" and so on.
+The filesystem, once mounted, provides two subdirectories named
+\*(T<\fIfrom\-file0/\fR\*(T> and
+\*(T<\fIfrom\-glob0/\fR\*(T>. Writing a '\e0' separated list
+of files or glob pattern to the \*(T<\fIcontrol\fR\*(T>
+file within those directories will create a virtual file
+containing all the content of the individual files. The name of
+the virtual file is the sha1 checksum of the data written to the
+control file.
 .SH "SEE ALSO"
 \fBvcat\fR(1),
