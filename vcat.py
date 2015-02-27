@@ -46,7 +46,7 @@ class ConcatFuse:
             basedir = os.path.join(os.environ["HOME"], ".concat-fuse")
         return basedir
 
-    def __init__(self, basedir=None):
+    def __init__(self, basedir=None, concat_fuse_exe=None):
         """Mounts concat-fuse to basedir when needed"""
 
         if basedir is None:
@@ -54,11 +54,16 @@ class ConcatFuse:
         else:
             self.basedir = basedir
 
+        if concat_fuse_exe is None:
+            self.concat_fuse_exe = "concat-fuse"
+        else:
+            self.concat_fuse_exe = concat_fuse_exe
+
         if not os.path.exists(self.basedir):
             os.mkdir(self.basedir)
 
         if not os.path.ismount(self.basedir):
-            subprocess.check_call(["concat-fuse", self.basedir])
+            subprocess.check_call([self.concat_fuse_exe, self.basedir])
 
     def concat(self, files):
         """Send the file list to concat-fuse and return the filename of the virtual file"""
@@ -104,6 +109,7 @@ def main():
 
     concat_fuse_group = parser.add_argument_group("concat-fuse options")
     concat_fuse_group.add_argument('-u', '--unmount', action='store_true', help="Unmount concat-fuse")
+    concat_fuse_group.add_argument('-e', '--exe', metavar="EXE", type=str, help="Use EXE instead of concat-fuse")
     concat_fuse_group.add_argument('-m', '--mountpoint', metavar="MOUNTPOINT", type=str, default=None,
                                    help="Use MOUNTPOINT instead of default")
 
@@ -172,7 +178,7 @@ def main():
                 for f in files:
                     print(f)
             else:
-                concat_fuse = ConcatFuse(args.mountpoint)
+                concat_fuse = ConcatFuse(args.mountpoint, args.exe)
                 virtual_filename = concat_fuse.concat(files)
                 print(virtual_filename)
         elif globs:
@@ -180,7 +186,7 @@ def main():
                 for g in globs:
                     print(g)
             else:
-                concat_fuse = ConcatFuse(args.mountpoint)
+                concat_fuse = ConcatFuse(args.mountpoint, args.exe)
                 virtual_filename = concat_fuse.glob(globs)
                 print(virtual_filename)
         else:
