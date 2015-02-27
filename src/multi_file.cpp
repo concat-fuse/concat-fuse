@@ -75,7 +75,7 @@ MultiFile::find_file(size_t* offset)
 ssize_t
 MultiFile::read(size_t pos, char* buf, size_t count)
 {
-  log_debug("magicfile_read({}, {}, {})", pos, buf, count);
+  log_debug("magicfile_read({}, {}, {})", pos, static_cast<void*>(buf), count);
 
   size_t total_count = 0;
   while(count != 0)
