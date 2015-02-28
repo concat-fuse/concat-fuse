@@ -135,4 +135,59 @@ MultiFile::read_subfile(const std::string& filename, size_t offset, char* buf, s
   }
 }
 
+int
+MultiFile::getattr(const char* path, struct stat* stbuf)
+{
+  stbuf->st_mode = S_IFREG | 0444;
+  stbuf->st_nlink = 2;
+  stbuf->st_size = get_size();
+  stbuf->st_mtim = get_mtime();
+  return 0;
+}
+
+int
+MultiFile::utimens(const char* path, const struct timespec tv[2])
+{
+  refresh();
+  return 0;
+}
+
+int
+MultiFile::open(const char* path, struct fuse_file_info* fi)
+{
+  return 0;
+}
+
+int
+MultiFile::read(const char* path, char* buf, size_t len, off_t offset,
+                struct fuse_file_info* fi)
+{
+  return static_cast<int>(read(static_cast<size_t>(offset), buf, len));
+}
+
+int
+MultiFile::write(const char* path, const char* buf, size_t len, off_t offset,
+            struct fuse_file_info* fi)
+{
+  return 0;
+}
+
+int
+MultiFile::truncate(const char* path, off_t offsite)
+{
+  return -EPERM;
+}
+
+int
+MultiFile::flush(const char* path, struct fuse_file_info* fi)
+{
+  return 0;
+}
+
+int
+MultiFile::release(const char* path, struct fuse_file_info* fi)
+{
+  return 0;
+}
+
 /* EOF */
