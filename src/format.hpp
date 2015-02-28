@@ -6,58 +6,32 @@
 #include <stdlib.h>
 #include <stdexcept>
 
-/** Simple Python'ish format function. {} gets replaced with arg, {{
-    and }} escapes */
-template<typename... Args>
-void format(std::ostream& os, const char* fmt)
+inline void format_arg(std::ostream& os, size_t i)
 {
-  size_t i = 0;
-  while(fmt[i] != '\0')
-  {
-    if (fmt[i] == '{')
-    {
-      if (fmt[i+1] == '{')
-      {
-        os.write(fmt, i + 1);
-        format(os, fmt + i + 2);
-        return;
-      }
-      else if (fmt[i+1] == '}')
-      {
-        throw std::invalid_argument("not enough arguments to format");
-      }
-      else
-      {
-        throw std::invalid_argument("{ not followed by { or }");
-      }
-    }
-    else if (fmt[i] == '}')
-    {
-      if (fmt[i+1] == '}')
-      {
-        os.write(fmt, i + 1);
-        format(os, fmt + i + 2);
-        return;
-      }
-      else
-      {
-        throw std::invalid_argument("} not followed by }");
-      }
-    }
-    else
-    {
-      i += 1;
-    }
-  }
+  throw std::invalid_argument("not enough arguments to format");
+}
 
-  os.write(fmt, i);
+template<typename Arg0, typename... Args>
+void format_arg(std::ostream& os, size_t i, Arg0&& arg0, Args&&... args)
+{
+  if (i == 0)
+  {
+    os << std::forward<Arg0>(arg0);
+  }
+  else
+  {
+    format_arg(os, i - 1, std::forward<Args>(args)...);
+  }
 }
 
 /** Simple Python'ish format function. {} gets replaced with arg, {{
     and }} escapes */
-template<typename Arg0, typename... Args>
-void format(std::ostream& os, const char* fmt, Arg0&& arg0, Args&&... args)
+template<typename... Args>
+void format(std::ostream& os, const char* fmt, Args&&... args)
 {
+  size_t arg_idx = 0;
+
+  size_t start = 0;
   size_t i = 0;
   while(fmt[i] != '\0')
   {
@@ -65,16 +39,20 @@ void format(std::ostream& os, const char* fmt, Arg0&& arg0, Args&&... args)
     {
       if (fmt[i+1] == '{')
       {
-        os.write(fmt, i + 1);
-        format(os, fmt + i + 2, arg0, args...);
-        return;
+        os.write(fmt + start, i + 1 - start);
+
+        i += 2;
+        start = i;
       }
       else if (fmt[i+1] == '}')
       {
-        os.write(fmt, i);
-        os << arg0;
-        format(os, fmt + i + 2, args...);
-        return;
+        os.write(fmt + start, i - start);
+
+        format_arg(os, arg_idx, std::forward<Args>(args)...);
+        arg_idx += 1;
+
+        i += 2;
+        start = i;
       }
       else
       {
@@ -85,9 +63,9 @@ void format(std::ostream& os, const char* fmt, Arg0&& arg0, Args&&... args)
     {
       if (fmt[i+1] == '}')
       {
-        os.write(fmt, i + 1);
-        format(os, fmt + i + 2, arg0, args...);
-        return;
+        os.write(fmt + start, i + 1 - start);
+        i += 2;
+        start = i;
       }
       else
       {
@@ -99,7 +77,11 @@ void format(std::ostream& os, const char* fmt, Arg0&& arg0, Args&&... args)
       i += 1;
     }
   }
-  throw std::invalid_argument("to many arguments to format");
+
+  if (start != i)
+  {
+    os.write(fmt + start, i - start);
+  }
 }
 
 #endif

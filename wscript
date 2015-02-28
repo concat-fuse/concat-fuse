@@ -32,7 +32,7 @@ developer_cxxflags = [
     "-Wcast-qual",
     "-Winit-self", # only works with >= -O1
     "-Wno-unused-parameter",
-    "-Winline",
+    # "-Winline",
     "-Wfloat-equal",
     "-Wunreachable-code",
 ]

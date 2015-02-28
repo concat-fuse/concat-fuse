@@ -34,17 +34,17 @@ std::string format_str(Args&&... args)
 
 TEST(FormatTest, format)
 {
-  ASSERT_EQ(format_str("{}", 5), "5");
-  ASSERT_EQ(format_str("{} {} {}", 5, 6, 7), "5 6 7");
-  ASSERT_EQ(format_str("{{ }}"), "{ }");
-  ASSERT_EQ(format_str("{{ {} }}", 9123), "{ 9123 }");
-  ASSERT_EQ(format_str("{{"), "{");
-  ASSERT_EQ(format_str("}}"), "}");
+  EXPECT_EQ("5", format_str("{}", 5));
+  EXPECT_EQ("5 6 7", format_str("{} {} {}", 5, 6, 7));
+  EXPECT_EQ("{ }", format_str("{{ }}"));
+  EXPECT_EQ("foo(5)", format_str("foo({})", 5));
+  EXPECT_EQ("{ 9123 }", format_str("{{ {} }}", 9123));
+  EXPECT_EQ("{", format_str("{{"));
+  EXPECT_EQ("}", format_str("}}"));
 
-  ASSERT_THROW(format_str("{"), std::invalid_argument);
-  ASSERT_THROW(format_str("}"), std::invalid_argument);
-  ASSERT_THROW(format_str("{foobar}"), std::invalid_argument);
+  EXPECT_THROW(format_str("{"), std::invalid_argument);
+  EXPECT_THROW(format_str("}"), std::invalid_argument);
+  EXPECT_THROW(format_str("{foobar}"), std::invalid_argument);
 }
 
 /* EOF */
-
