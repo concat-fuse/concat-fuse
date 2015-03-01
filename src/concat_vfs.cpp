@@ -319,8 +319,6 @@ ConcatVFS::truncate(const char* path, off_t offset)
   {
     return -ENOENT;
   }
-
-  return 0;
 }
 
 /* EOF */

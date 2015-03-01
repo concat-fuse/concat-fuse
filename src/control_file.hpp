@@ -21,13 +21,20 @@
 
 #include "file.hpp"
 
+class SimpleDirectory;
+
 class ControlFile : public File
 {
+public:
+  enum  Mode { GLOB_MODE, LIST_MODE };
+
 private:
+  SimpleDirectory& m_directory;
+  Mode m_mode;
   std::vector<std::string> m_tmpbuf;
 
 public:
-  ControlFile(ConcatVFS& vfs);
+  ControlFile(ConcatVFS& vfs, SimpleDirectory& directory, Mode mode);
   ~ControlFile();
 
   int getattr(const char* path, struct stat* stbuf) override;

@@ -19,6 +19,12 @@
 #include <sys/stat.h>
 #include <fuse.h>
 
+#include "glob_file_list.hpp"
+#include "multi_file.hpp"
+#include "simple_directory.hpp"
+#include "simple_file_list.hpp"
+#include "util.hpp"
+
 namespace {
 
 uint64_t make_fh(size_t v)
@@ -33,8 +39,10 @@ size_t fh2idx(uint64_t handle)
 
 } // namespace
 
-ControlFile::ControlFile(ConcatVFS& vfs) :
+ControlFile::ControlFile(ConcatVFS& vfs, SimpleDirectory& directory, Mode mode) :
   File(vfs),
+  m_directory(directory),
+  m_mode(mode),
   m_tmpbuf()
 {
 }
@@ -97,7 +105,35 @@ ControlFile::flush(const char* path, struct fuse_file_info* fi)
 int
 ControlFile::release(const char* path, struct fuse_file_info* fi)
 {
-  return 0;
+  const std::string& data = m_tmpbuf[fh2idx(fi->fh)];
+  std::string sha1 = sha1sum(data);
+
+  log_debug("RECEIVED: {}", sha1);
+
+  auto it = m_directory.get_files().find(sha1);
+  if (it == m_directory.get_files().end())
+  {
+    dynamic_cast<MultiFile&>(*it->second).refresh();
+    return 0;
+  }
+  else
+  {
+    switch(m_mode)
+    {
+      case GLOB_MODE:
+        m_directory.add_file(sha1,
+                             make_unique<MultiFile>(m_vfs, make_unique<GlobFileList>(split(data, '\0'))));
+        return 0;
+
+      case LIST_MODE:
+        m_directory.add_file(sha1,
+                             make_unique<MultiFile>(m_vfs, make_unique<SimpleFileList>(split(data, '\0'))));
+        return 0;
+
+      default:
+        return 0;
+    }
+  }
 }
 
 /* EOF */
