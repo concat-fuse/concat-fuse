@@ -24,6 +24,8 @@
 #include <vector>
 
 #include "concat_vfs.hpp"
+#include "simple_directory.hpp"
+#include "simple_file.hpp"
 #include "util.hpp"
 
 int concat_getattr(const char* path, struct stat* stbuf)
@@ -113,6 +115,15 @@ int concat_fuse_main(int argc, char** argv)
   ops.truncate = concat_truncate;
 
   auto vfs = make_unique<ConcatVFS>();
+  SimpleDirectory& root = vfs->get_root();
+
+  std::string readme_data =
+    "concat-fuse\n"
+    "-----------\n";
+  root.add_file("README", make_unique<SimpleFile>(*vfs, readme_data));
+  root.add_directory("from-file0", make_unique<SimpleDirectory>(*vfs, "/"));
+  root.add_directory("from-glob", make_unique<SimpleDirectory>(*vfs, "/"));
+
   return fuse_main(argc, argv, &ops, vfs.get());
 }
 

@@ -17,11 +17,17 @@
 #ifndef HEADER_CONTROL_FILE_HPP
 #define HEADER_CONTROL_FILE_HPP
 
-class ControlFile
+#include <vector>
+
+#include "file.hpp"
+
+class ControlFile : public File
 {
 private:
+  std::vector<std::string> m_tmpbuf;
+
 public:
-  ControlFile();
+  ControlFile(ConcatVFS& vfs);
   ~ControlFile();
 
   int getattr(const char* path, struct stat* stbuf) override;

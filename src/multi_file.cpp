@@ -30,7 +30,8 @@
 
 #include "util.hpp"
 
-MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
+MultiFile::MultiFile(ConcatVFS& vfs, std::unique_ptr<FileList> file_list) :
+  File(vfs),
   m_pos(0),
   m_mtime(),
   m_file_list(std::move(file_list)),

@@ -14,18 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <gtest/gtest.h>
-
-#include <string>
-
 #include "directory.hpp"
-#include "util.hpp"
-
-TEST(DirectoryTest, check)
-{
-  // auto directory = make_unique<SimpleDirectory>();
-  // struct stat stbuf;
-  // directory->getattr("path", &stbuf);
-}
 
 /* EOF */

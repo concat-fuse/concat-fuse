@@ -27,14 +27,14 @@ class Directory;
 
 using DirectoryPtr = std::unique_ptr<Directory>;
 
-class Directory
+class Directory : public Entry
 {
-public:
-  Directory() {}
-  virtual ~Directory() {}
+protected:
+  std::string m_basedir;
 
-  virtual int getattr(const char* path, struct stat* stbuf) = 0;
-  virtual int utimens(const char* path, const struct timespec tv[2]) = 0;
+public:
+  Directory(ConcatVFS& vfs, const std::string& basedir) : Entry(vfs), m_basedir(basedir) {}
+  virtual ~Directory() {}
 
   virtual int opendir(const char* path, struct fuse_file_info*) = 0;
   virtual int readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
@@ -44,82 +44,6 @@ public:
 private:
   Directory(const Directory&) = delete;
   Directory& operator=(const Directory&) = delete;
-};
-
-class SimpleDirectory : public Directory
-{
-private:
-  std::unordered_map<std::string, DirectoryPtr> m_directories;
-  std::unordered_map<std::string, FilePtr> m_files;
-
-public:
-  SimpleDirectory() :
-    m_directories(),
-    m_files()
-  {}
-
-  virtual ~SimpleDirectory() {}
-
-  const std::unordered_map<std::string, DirectoryPtr>& get_directories() const
-  {
-    return m_directories;
-  }
-
-  const std::unordered_map<std::string, FilePtr>& get_files() const
-  {
-    return m_files;
-  }
-
-  void add_file(const std::string& name, FilePtr file)
-  {
-    m_files[name] = std::move(file);
-  }
-
-  void add_directory(const std::string& name, DirectoryPtr directory)
-  {
-    m_directories[name] = std::move(directory);
-  }
-
-  int getattr(const char* path, struct stat* stbuf) override
-  {
-    stbuf->st_mode = S_IFDIR | 0755;
-    stbuf->st_nlink = 2;
-    return 0;
-  }
-
-  int utimens(const char* path, const struct timespec tv[2]) override
-  {
-    return 0;
-  }
-
-  int opendir(const char* path, struct fuse_file_info* fi) override
-  {
-    return 0;
-  }
-
-  int readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
-              struct fuse_file_info* fi) override
-  {
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-
-    for(const auto& it : m_directories)
-    {
-      filler(buf, it.first.c_str(), NULL, 0);
-    }
-
-    for(const auto& it : m_files)
-    {
-      filler(buf, it.first.c_str(), NULL, 0);
-    }
-
-    return 0;
-  }
-
-  int releasedir(const char* path, struct fuse_file_info* fi) override
-  {
-    return 0;
-  }
 };
 
 #endif

@@ -14,40 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#ifndef HEADER_SIMPLE_FILE_HPP
+#define HEADER_SIMPLE_FILE_HPP
 
-#include <memory>
-#include <string>
-#include <sys/types.h>
-#include <vector>
-
-#include "file_list.hpp"
 #include "file.hpp"
 
-class MultiFile : public File
+class SimpleFile : public File
 {
 private:
-  size_t m_pos;
-  struct timespec m_mtime;
-
-  std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
+  std::string m_data;
 
 public:
-  MultiFile(ConcatVFS& vfs, std::unique_ptr<FileList> file_list);
-
-  ssize_t read(size_t pos, char* buf, size_t count);
-  size_t get_size() const;
-  struct timespec get_mtime() const;
-  void refresh();
+  SimpleFile(ConcatVFS& vfs, const std::string& data);
+  virtual ~SimpleFile();
 
   int getattr(const char* path, struct stat* stbuf) override;
   int utimens(const char* path, const struct timespec tv[2]) override;
 
   int open(const char* path, struct fuse_file_info* fi) override;
   int read(const char* path, char* buf, size_t len, off_t offset,
-           struct fuse_file_info* fi) override;
+                   struct fuse_file_info* fi) override;
   int write(const char* path, const char* buf, size_t len, off_t offset,
                     struct fuse_file_info* fi) override;
   int truncate(const char* path, off_t offsite) override;
@@ -55,13 +41,8 @@ public:
   int release(const char* path, struct fuse_file_info* fi) override;
 
 private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
-
-private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
+  SimpleFile(const SimpleFile&) = delete;
+  SimpleFile& operator=(const SimpleFile&) = delete;
 };
 
 #endif

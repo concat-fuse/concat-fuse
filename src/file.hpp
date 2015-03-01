@@ -19,19 +19,18 @@
 
 #include <memory>
 
+#include "entry.hpp"
+
 class File;
 
 using FilePtr = std::unique_ptr<File>;
 
-class File
+class File : public Entry
 {
 private:
 public:
-  File() {}
+  File(ConcatVFS& vfs) : Entry(vfs) {}
   virtual ~File() {}
-
-  virtual int getattr(const char* path, struct stat* stbuf) = 0;
-  virtual int utimens(const char* path, const struct timespec tv[2]) = 0;
 
   virtual int open(const char* path, struct fuse_file_info* fi) = 0;
   virtual int read(const char* path, char* buf, size_t len, off_t offset,

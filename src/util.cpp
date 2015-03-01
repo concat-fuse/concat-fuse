@@ -164,6 +164,23 @@ std::vector<std::string> split(const std::string& str, char c)
   return result;
 }
 
+std::string path_join(const std::string& base, const std::string& name)
+{
+  if (base.empty())
+  {
+    log_debug("Shouldn't happen");
+    return name;
+  }
+  else if (base[base.size() - 1] == '/')
+  {
+    return base + name;
+  }
+  else
+  {
+    return base + "/" + name;
+  }
+}
+
 size_t get_file_size(const std::string& filename)
 {
   struct stat buf;

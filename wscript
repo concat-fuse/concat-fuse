@@ -72,9 +72,13 @@ def build(bld):
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
                       "src/concat_vfs.cpp",
-                      "src/multi_file.cpp",
-                      "src/simple_file_list.cpp",
+                      "src/control_file.cpp",
+                      "src/directory.cpp",
                       "src/glob_file_list.cpp",
+                      "src/multi_file.cpp",
+                      "src/simple_directory.cpp",
+                      "src/simple_file.cpp",
+                      "src/simple_file_list.cpp",
                       "src/util.cpp"],
               use=["WARNINGS", "FUSE", "MHASH"])
 

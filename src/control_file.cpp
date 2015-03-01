@@ -16,7 +16,26 @@
 
 #include "control_file.hpp"
 
-ControlFile::ControlFile()
+#include <sys/stat.h>
+#include <fuse.h>
+
+namespace {
+
+uint64_t make_fh(size_t v)
+{
+  return v + 1;
+}
+
+size_t fh2idx(uint64_t handle)
+{
+  return handle - 1;
+}
+
+} // namespace
+
+ControlFile::ControlFile(ConcatVFS& vfs) :
+  File(vfs),
+  m_tmpbuf()
 {
 }
 
@@ -42,11 +61,14 @@ ControlFile::utimens(const char* path, const struct timespec tv[2])
 int
 ControlFile::open(const char* path, struct fuse_file_info* fi)
 {
+  m_tmpbuf.push_back({});
+  fi->fh = make_fh(m_tmpbuf.size());
+  fi->direct_io = 1;
   return 0;
 }
 
 int
-ControlFile::read(const char* path, char* buf, size_t len, off_t offset
+ControlFile::read(const char* path, char* buf, size_t len, off_t offset,
                   struct fuse_file_info* fi)
 {
   return 0;
@@ -56,6 +78,7 @@ int
 ControlFile::write(const char* path, const char* buf, size_t len, off_t offset,
                    struct fuse_file_info* fi)
 {
+  m_tmpbuf[fh2idx(fi->fh)].append(buf, len);
   return 0;
 }
 

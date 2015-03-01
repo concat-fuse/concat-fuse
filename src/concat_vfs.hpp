@@ -25,21 +25,24 @@
 #include <vector>
 #include <mutex>
 
+#include "directory.hpp"
 #include "multi_file.hpp"
+
+class SimpleDirectory;
 
 class ConcatVFS
 {
 private:
   std::mutex m_mutex;
-
-  std::vector<std::string> m_from_file0_tmpbuf;
-  std::map<std::string, std::unique_ptr<MultiFile> > m_from_file0_multi_files;
-
-  std::vector<std::string> m_from_glob0_tmpbuf;
-  std::map<std::string, std::unique_ptr<MultiFile> > m_from_glob0_multi_files;
+  std::map<std::string, Entry*> m_entries;
+  std::unique_ptr<SimpleDirectory> m_root;
 
 public:
   ConcatVFS();
+
+  Entry* lookup(const std::string& path);
+  void add_entry(const std::string& path, Entry* entry);
+  SimpleDirectory& get_root() const;
 
   int getattr(const char* path, struct stat* stbuf);
   int utimens(const char* path, const struct timespec tv[2]);

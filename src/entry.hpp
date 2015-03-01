@@ -14,18 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <gtest/gtest.h>
+#ifndef HEADER_ENTRY_HPP
+#define HEADER_ENTRY_HPP
 
-#include <string>
+class ConcatVFS;
 
-#include "directory.hpp"
-#include "util.hpp"
-
-TEST(DirectoryTest, check)
+class Entry
 {
-  // auto directory = make_unique<SimpleDirectory>();
-  // struct stat stbuf;
-  // directory->getattr("path", &stbuf);
-}
+protected:
+  ConcatVFS& m_vfs;
+
+public:
+  Entry(ConcatVFS& vfs) : m_vfs(vfs) {}
+  virtual ~Entry() {}
+
+  virtual int getattr(const char* path, struct stat* stbuf) = 0;
+  virtual int utimens(const char* path, const struct timespec tv[2]) = 0;
+
+private:
+  Entry(const Entry&) = delete;
+  Entry& operator=(const Entry&) = delete;
+};
+
+#endif
 
 /* EOF */
