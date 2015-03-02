@@ -21,15 +21,12 @@ class ConcatVFS;
 
 class Entry
 {
-protected:
-  ConcatVFS& m_vfs;
-
 public:
-  Entry(ConcatVFS& vfs) : m_vfs(vfs) {}
+  Entry() {}
   virtual ~Entry() {}
 
-  virtual int getattr(const char* path, struct stat* stbuf) = 0;
-  virtual int utimens(const char* path, const struct timespec tv[2]) = 0;
+  virtual int getattr(const char* path, struct stat* stbuf) { return -ENOSYS; }
+  virtual int utimens(const char* path, const struct timespec tv[2]) { return -ENOSYS; }
 
 private:
   Entry(const Entry&) = delete;

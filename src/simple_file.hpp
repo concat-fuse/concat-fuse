@@ -25,20 +25,13 @@ private:
   std::string m_data;
 
 public:
-  SimpleFile(ConcatVFS& vfs, const std::string& data);
+  SimpleFile(const std::string& data);
   virtual ~SimpleFile();
 
   int getattr(const char* path, struct stat* stbuf) override;
-  int utimens(const char* path, const struct timespec tv[2]) override;
-
-  int open(const char* path, struct fuse_file_info* fi) override;
   int read(const char* path, char* buf, size_t len, off_t offset,
-                   struct fuse_file_info* fi) override;
-  int write(const char* path, const char* buf, size_t len, off_t offset,
-                    struct fuse_file_info* fi) override;
-  int truncate(const char* path, off_t offsite) override;
+           struct fuse_file_info* fi) override;
   int flush(const char* path, struct fuse_file_info* fi) override;
-  int release(const char* path, struct fuse_file_info* fi) override;
 
 private:
   SimpleFile(const SimpleFile&) = delete;

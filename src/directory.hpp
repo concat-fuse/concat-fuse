@@ -29,17 +29,20 @@ using DirectoryPtr = std::unique_ptr<Directory>;
 
 class Directory : public Entry
 {
-protected:
-  std::string m_basedir;
+private:
+  Directory* m_parent;
 
 public:
-  Directory(ConcatVFS& vfs, const std::string& basedir) : Entry(vfs), m_basedir(basedir) {}
+  Directory() : m_parent(nullptr) {}
   virtual ~Directory() {}
 
-  virtual int opendir(const char* path, struct fuse_file_info*) = 0;
+  void set_parent(Directory* parent);
+  Directory* get_parent() const;
+
+  virtual int opendir(const char* path, struct fuse_file_info*) { return -ENOSYS; }
   virtual int readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
-                      struct fuse_file_info* fi) = 0;
-  virtual int releasedir(const char* path, struct fuse_file_info* fi) = 0;
+                      struct fuse_file_info* fi) { return -ENOSYS; }
+  virtual int releasedir(const char* path, struct fuse_file_info* fi) { return -ENOSYS; }
 
 private:
   Directory(const Directory&) = delete;

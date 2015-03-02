@@ -34,19 +34,15 @@ private:
   std::vector<std::string> m_tmpbuf;
 
 public:
-  ControlFile(ConcatVFS& vfs, SimpleDirectory& directory, Mode mode);
+  ControlFile(SimpleDirectory& directory, Mode mode);
   ~ControlFile();
 
   int getattr(const char* path, struct stat* stbuf) override;
-  int utimens(const char* path, const struct timespec tv[2]) override;
 
   int open(const char* path, struct fuse_file_info* fi) override;
-  int read(const char* path, char* buf, size_t len, off_t offset,
-                   struct fuse_file_info* fi) override;
   int write(const char* path, const char* buf, size_t len, off_t offset,
                     struct fuse_file_info* fi) override;
   int truncate(const char* path, off_t offsite) override;
-  int flush(const char* path, struct fuse_file_info* fi) override;
   int release(const char* path, struct fuse_file_info* fi) override;
 
 private:

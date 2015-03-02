@@ -30,8 +30,7 @@
 
 #include "util.hpp"
 
-MultiFile::MultiFile(ConcatVFS& vfs, std::unique_ptr<FileList> file_list) :
-  File(vfs),
+MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
   m_pos(0),
   m_mtime(),
   m_file_list(std::move(file_list)),
@@ -104,8 +103,7 @@ MultiFile::read(size_t pos, char* buf, size_t count)
       {
         read_count = m_files[idx].size - offset;
       }
-      read_subfile(m_files[idx].filename,
-                   offset, buf, read_count);
+      read_subfile(m_files[idx].filename, offset, buf, read_count);
       pos += read_count;
       buf += read_count;
       count -= read_count;
@@ -120,7 +118,7 @@ void
 MultiFile::read_subfile(const std::string& filename, size_t offset, char* buf, size_t count)
 {
   // FIXME: insert error handling here
-  int fd = open(filename.c_str(), O_RDONLY);
+  int fd = ::open(filename.c_str(), O_RDONLY);
   if (fd < 0)
   {
     perror(filename.c_str());
@@ -154,41 +152,10 @@ MultiFile::utimens(const char* path, const struct timespec tv[2])
 }
 
 int
-MultiFile::open(const char* path, struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
 MultiFile::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info* fi)
 {
-  return static_cast<int>(read(static_cast<size_t>(offset), buf, len));
-}
-
-int
-MultiFile::write(const char* path, const char* buf, size_t len, off_t offset,
-            struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
-MultiFile::truncate(const char* path, off_t offsite)
-{
-  return -EPERM;
-}
-
-int
-MultiFile::flush(const char* path, struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
-MultiFile::release(const char* path, struct fuse_file_info* fi)
-{
-  return 0;
+  return static_cast<int>(MultiFile::read(static_cast<size_t>(offset), buf, len));
 }
 
 /* EOF */

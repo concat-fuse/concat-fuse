@@ -19,15 +19,21 @@
 #include "concat_vfs.hpp"
 #include "util.hpp"
 
-SimpleDirectory::SimpleDirectory(ConcatVFS& vfs, const std::string& basedir) :
-  Directory(vfs, basedir),
+SimpleDirectory::SimpleDirectory() :
   m_directories(),
-  m_files()
+  m_files(),
+  m_on_change()
 {
 }
 
 SimpleDirectory::~SimpleDirectory()
 {
+}
+
+void
+SimpleDirectory::set_on_change(const std::function<void ()>& on_change)
+{
+  m_on_change = on_change;
 }
 
 const std::unordered_map<std::string, DirectoryPtr>&
@@ -45,15 +51,22 @@ SimpleDirectory::get_files() const
 void
 SimpleDirectory::add_file(const std::string& name, FilePtr file)
 {
-  m_vfs.add_entry(path_join(m_basedir, name), file.get());
   m_files[name] = std::move(file);
+  if (m_on_change)
+  {
+    m_on_change();
+  }
 }
 
 void
 SimpleDirectory::add_directory(const std::string& name, DirectoryPtr directory)
 {
-  m_vfs.add_entry(path_join(m_basedir, name), directory.get());
+  directory->set_parent(this);
   m_directories[name] = std::move(directory);
+  if (m_on_change)
+  {
+    m_on_change();
+  }
 }
 
 int
@@ -61,18 +74,6 @@ SimpleDirectory::getattr(const char* path, struct stat* stbuf)
 {
   stbuf->st_mode = S_IFDIR | 0755;
   stbuf->st_nlink = 2;
-  return 0;
-}
-
-int
-SimpleDirectory::utimens(const char* path, const struct timespec tv[2])
-{
-  return 0;
-}
-
-int
-SimpleDirectory::opendir(const char* path, struct fuse_file_info* fi)
-{
   return 0;
 }
 
@@ -93,6 +94,12 @@ SimpleDirectory::readdir(const char* path, void* buf, fuse_fill_dir_t filler, of
     filler(buf, it.first.c_str(), NULL, 0);
   }
 
+  return 0;
+}
+
+int
+SimpleDirectory::opendir(const char* path, struct fuse_file_info*)
+{
   return 0;
 }
 

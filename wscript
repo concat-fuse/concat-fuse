@@ -55,7 +55,7 @@ def configure(conf):
     if not conf.check_cfg(package='mhash', args=['--cflags', '--libs'], mandatory=False):
         conf.check(lib="mhash")
 
-    conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O3", "-g"])
+    conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O0", "-g"])
 
     if conf.options.developer:
         conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)

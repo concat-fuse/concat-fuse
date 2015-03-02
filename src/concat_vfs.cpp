@@ -28,10 +28,31 @@
 #include "simple_file_list.hpp"
 #include "util.hpp"
 
+void
+traverse_simple_directory(SimpleDirectory& directory,
+                          std::unordered_map<std::string, Entry*>& m_entries,
+                          const std::string& basedir,
+                          const std::function<void ()>& on_change)
+{
+  directory.set_on_change(on_change);
+
+  for(const auto& files : directory.get_files())
+  {
+    m_entries[path_join(basedir, files.first)] = files.second.get();
+  }
+
+  for(const auto& dir : directory.get_directories())
+  {
+    std::string path = path_join(basedir, dir.first);
+    m_entries[path] = dir.second.get();
+    traverse_simple_directory(static_cast<SimpleDirectory&>(*dir.second), m_entries, path, on_change);
+  }
+}
+
 ConcatVFS::ConcatVFS() :
   m_mutex(),
   m_entries(),
-  m_root(new SimpleDirectory(*this, "/"))
+  m_root(new SimpleDirectory)
 {
   add_entry("/", m_root.get());
 }
@@ -54,6 +75,14 @@ void
 ConcatVFS::add_entry(const std::string& path, Entry* entry)
 {
   m_entries[path] = entry;
+}
+
+void
+ConcatVFS::rebuild_entry_cache()
+{
+  m_entries.clear();
+  m_entries["/"] = m_root.get();
+  traverse_simple_directory(*m_root, m_entries, "/", [this]{ rebuild_entry_cache(); });
 }
 
 SimpleDirectory&

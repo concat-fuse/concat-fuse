@@ -29,7 +29,7 @@ namespace {
 
 uint64_t make_fh(size_t v)
 {
-  return v + 1;
+  return v;
 }
 
 size_t fh2idx(uint64_t handle)
@@ -39,8 +39,7 @@ size_t fh2idx(uint64_t handle)
 
 } // namespace
 
-ControlFile::ControlFile(ConcatVFS& vfs, SimpleDirectory& directory, Mode mode) :
-  File(vfs),
+ControlFile::ControlFile(SimpleDirectory& directory, Mode mode) :
   m_directory(directory),
   m_mode(mode),
   m_tmpbuf()
@@ -61,12 +60,6 @@ ControlFile::getattr(const char* path, struct stat* stbuf)
 }
 
 int
-ControlFile::utimens(const char* path, const struct timespec tv[2])
-{
-  return 0;
-}
-
-int
 ControlFile::open(const char* path, struct fuse_file_info* fi)
 {
   m_tmpbuf.push_back({});
@@ -76,28 +69,15 @@ ControlFile::open(const char* path, struct fuse_file_info* fi)
 }
 
 int
-ControlFile::read(const char* path, char* buf, size_t len, off_t offset,
-                  struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
 ControlFile::write(const char* path, const char* buf, size_t len, off_t offset,
                    struct fuse_file_info* fi)
 {
   m_tmpbuf[fh2idx(fi->fh)].append(buf, len);
-  return 0;
+  return static_cast<int>(len);
 }
 
 int
 ControlFile::truncate(const char* path, off_t offsite)
-{
-  return 0;
-}
-
-int
-ControlFile::flush(const char* path, struct fuse_file_info* fi)
 {
   return 0;
 }
@@ -111,7 +91,7 @@ ControlFile::release(const char* path, struct fuse_file_info* fi)
   log_debug("RECEIVED: {}", sha1);
 
   auto it = m_directory.get_files().find(sha1);
-  if (it == m_directory.get_files().end())
+  if (it != m_directory.get_files().end())
   {
     dynamic_cast<MultiFile&>(*it->second).refresh();
     return 0;
@@ -122,12 +102,12 @@ ControlFile::release(const char* path, struct fuse_file_info* fi)
     {
       case GLOB_MODE:
         m_directory.add_file(sha1,
-                             make_unique<MultiFile>(m_vfs, make_unique<GlobFileList>(split(data, '\0'))));
+                             make_unique<MultiFile>(make_unique<GlobFileList>(split(data, '\0'))));
         return 0;
 
       case LIST_MODE:
         m_directory.add_file(sha1,
-                             make_unique<MultiFile>(m_vfs, make_unique<SimpleFileList>(split(data, '\0'))));
+                             make_unique<MultiFile>(make_unique<SimpleFileList>(split(data, '\0'))));
         return 0;
 
       default:

@@ -29,17 +29,17 @@ class File : public Entry
 {
 private:
 public:
-  File(ConcatVFS& vfs) : Entry(vfs) {}
+  File() {}
   virtual ~File() {}
 
-  virtual int open(const char* path, struct fuse_file_info* fi) = 0;
+  virtual int open(const char* path, struct fuse_file_info* fi) { return -ENOSYS; }
   virtual int read(const char* path, char* buf, size_t len, off_t offset,
-                   struct fuse_file_info* fi) = 0;
+                   struct fuse_file_info* fi) { return -ENOSYS; }
   virtual int write(const char* path, const char* buf, size_t len, off_t offset,
-                    struct fuse_file_info* fi) = 0;
-  virtual int truncate(const char* path, off_t offsite) = 0;
-  virtual int flush(const char* path, struct fuse_file_info* fi) = 0;
-  virtual int release(const char* path, struct fuse_file_info* fi) = 0;
+                    struct fuse_file_info* fi) { return -ENOSYS; }
+  virtual int truncate(const char* path, off_t offsite) { return -ENOSYS; }
+  virtual int flush(const char* path, struct fuse_file_info* fi) { return -ENOSYS; }
+  virtual int release(const char* path, struct fuse_file_info* fi) { return -ENOSYS; }
 
 private:
   File(const File&) = delete;

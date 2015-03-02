@@ -25,9 +25,13 @@ private:
   std::unordered_map<std::string, DirectoryPtr> m_directories;
   std::unordered_map<std::string, FilePtr> m_files;
 
+  std::function<void ()> m_on_change;
+
 public:
-  SimpleDirectory(ConcatVFS& vfs, const std::string& basedir);
+  SimpleDirectory();
   virtual ~SimpleDirectory();
+
+  void set_on_change(const std::function<void ()>& on_change);
 
   const std::unordered_map<std::string, DirectoryPtr>& get_directories() const;
   const std::unordered_map<std::string, FilePtr>& get_files() const;
@@ -36,13 +40,11 @@ public:
   void add_directory(const std::string& name, DirectoryPtr directory);
 
   int getattr(const char* path, struct stat* stbuf) override;
-  int utimens(const char* path, const struct timespec tv[2]) override;
-  int opendir(const char* path, struct fuse_file_info* fi) override;
-
+  int opendir(const char* path, struct fuse_file_info*) override;
   int readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
               struct fuse_file_info* fi) override;
-
   int releasedir(const char* path, struct fuse_file_info* fi) override;
+
 };
 
 #endif

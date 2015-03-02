@@ -121,15 +121,17 @@ int concat_fuse_main(int argc, char** argv)
   std::string readme_data =
     "concat-fuse\n"
     "-----------\n";
-  root.add_file("README", make_unique<SimpleFile>(*vfs, readme_data));
+  root.add_file("README", make_unique<SimpleFile>(readme_data));
 
-  auto from_file_dir = make_unique<SimpleDirectory>(*vfs, "/");
-  from_file_dir->add_file("control", make_unique<ControlFile>(*vfs, *from_file_dir, ControlFile::LIST_MODE));
+  auto from_file_dir = make_unique<SimpleDirectory>();
+  from_file_dir->add_file("control", make_unique<ControlFile>(*from_file_dir, ControlFile::LIST_MODE));
   root.add_directory("from-file0", std::move(from_file_dir));
 
-  auto from_glob_dir = make_unique<SimpleDirectory>(*vfs, "/");
-  from_glob_dir->add_file("control", make_unique<ControlFile>(*vfs, *from_glob_dir, ControlFile::GLOB_MODE));
+  auto from_glob_dir = make_unique<SimpleDirectory>();
+  from_glob_dir->add_file("control", make_unique<ControlFile>(*from_glob_dir, ControlFile::GLOB_MODE));
   root.add_directory("from-glob0", std::move(from_glob_dir));
+
+  vfs->rebuild_entry_cache();
 
   return fuse_main(argc, argv, &ops, vfs.get());
 }

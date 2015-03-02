@@ -16,4 +16,18 @@
 
 #include "directory.hpp"
 
+#include <assert.h>
+
+void
+Directory::set_parent(Directory* parent)
+{
+  m_parent = parent;
+}
+
+Directory*
+Directory::get_parent() const
+{
+  return m_parent;
+}
+
 /* EOF */

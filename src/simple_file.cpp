@@ -19,8 +19,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-SimpleFile::SimpleFile(ConcatVFS& vfs, const std::string& data) :
-  File(vfs),
+SimpleFile::SimpleFile(const std::string& data) :
   m_data(data)
 {
 }
@@ -35,18 +34,6 @@ SimpleFile::getattr(const char* path, struct stat* stbuf)
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
   stbuf->st_size = m_data.size();
-  return 0;
-}
-
-int
-SimpleFile::utimens(const char* path, const struct timespec tv[2])
-{
-  return 0;
-}
-
-int
-SimpleFile::open(const char* path, struct fuse_file_info* fi)
-{
   return 0;
 }
 
@@ -67,26 +54,7 @@ SimpleFile::read(const char* path, char* buf, size_t len, off_t offset,
 }
 
 int
-SimpleFile::write(const char* path, const char* buf, size_t len, off_t offset,
-                  struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
-SimpleFile::truncate(const char* path, off_t offsite)
-{
-  return 0;
-}
-
-int
 SimpleFile::flush(const char* path, struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
-SimpleFile::release(const char* path, struct fuse_file_info* fi)
 {
   return 0;
 }

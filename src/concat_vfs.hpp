@@ -18,7 +18,7 @@
 #define HEADER_CONCAT_VFS_HPP
 
 #include <fuse.h>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <sys/types.h>
 #include <unistd.h>
@@ -34,7 +34,7 @@ class ConcatVFS
 {
 private:
   std::mutex m_mutex;
-  std::map<std::string, Entry*> m_entries;
+  std::unordered_map<std::string, Entry*> m_entries;
   std::unique_ptr<SimpleDirectory> m_root;
 
 public:
@@ -42,6 +42,7 @@ public:
 
   Entry* lookup(const std::string& path);
   void add_entry(const std::string& path, Entry* entry);
+  void rebuild_entry_cache();
   SimpleDirectory& get_root() const;
 
   int getattr(const char* path, struct stat* stbuf);

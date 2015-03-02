@@ -35,7 +35,7 @@ private:
   std::vector<FileInfo> m_files;
 
 public:
-  MultiFile(ConcatVFS& vfs, std::unique_ptr<FileList> file_list);
+  MultiFile(std::unique_ptr<FileList> file_list);
 
   ssize_t read(size_t pos, char* buf, size_t count);
   size_t get_size() const;
@@ -45,14 +45,8 @@ public:
   int getattr(const char* path, struct stat* stbuf) override;
   int utimens(const char* path, const struct timespec tv[2]) override;
 
-  int open(const char* path, struct fuse_file_info* fi) override;
   int read(const char* path, char* buf, size_t len, off_t offset,
            struct fuse_file_info* fi) override;
-  int write(const char* path, const char* buf, size_t len, off_t offset,
-                    struct fuse_file_info* fi) override;
-  int truncate(const char* path, off_t offsite) override;
-  int flush(const char* path, struct fuse_file_info* fi) override;
-  int release(const char* path, struct fuse_file_info* fi) override;
 
 private:
   void collect_file_info();
