@@ -115,20 +115,18 @@ def main():
 
     files_group = parser.add_argument_group("file options", "Options for static file lists.")
     files_group.add_argument('-n', '--dry-run', action='store_true', help="Don't send file list to concat-fuse, print to stdout")
-    files_group.add_argument('-k', '--keep', action='store_true', help="Continue despite errors")
-    files_group.add_argument('FILES', nargs='*', help="Files to virtually concat")
+    files_group.add_argument('-k', '--keep', action='store_true', help="Continue even when files are missing")
+    files_group.add_argument('FILES', nargs='*', help="Files to virtually concatenate")
     files_group.add_argument('--from-file', metavar='FILE', action='append', default=[], help="Read files from FILE, newline separated")
     files_group.add_argument('--from-file0', metavar='FILE', action='append', default=[], help="Read files from FILE, '\\0' separated")
+    files_group.add_argument('-', dest="stdin", action='store_true', help="Read files from stdin")
+    files_group.add_argument('-0', dest="stdin0", action='store_true', help="Read files from stdin, '\\0' separated")
 
-    files_group = parser.add_argument_group("glob options",
+    glob_group = parser.add_argument_group("glob options",
                                             ("Glob pattern act as dynamic file lists and the underlying virtual "
                                             "file can be dynamically updated when new files arrive."))
 
-    files_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[], help="Use glob")
-
-    stdin_group = files_group.add_mutually_exclusive_group()
-    stdin_group.add_argument('-', dest="stdin", action='store_true', help="Read files from stdin")
-    stdin_group.add_argument('-0', dest="stdin0", action='store_true', help="Read files from stdin, '\\0' separated")
+    glob_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[], help="Use glob")
 
     args = parser.parse_args()
 

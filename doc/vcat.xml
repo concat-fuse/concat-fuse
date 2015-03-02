@@ -65,10 +65,43 @@ File Number One
 File Number Two]]></programlisting>
 
     <para>
+      The glob pattern can also provided to <command>vcat</command>
+      directly instead of being expanded by the Shell, this allows
+      circumventing:
+    </para>
+    <screen>bash: /home/ingo/bin/vcat: Argument list too long</screen>
+    <para>
+      Furthermore <command>touch</command>'ing the virtual file or
+      resubmitting the glob pattern will update the virtual file in
+      case new files have arrived matching the pattern. Note that the
+      glob pattern needs to be quoted when supplied to
+      <command>--glob</command>.
+    </para>
+    <programlisting><![CDATA[$ echo "File Number One" > /tmp/1.txt
+$ echo "File Number Two" > /tmp/2.txt
+$ cat $(vcat --glob "/tmp/*.txt")
+File Number One
+File Number Two]]></programlisting>
+
+    <para>
       Once done with the virtual file the virtual filesystem can be
       unmounted with:
     </para>
     <programlisting><![CDATA[$ vcat -u]]></programlisting>
+  </refsect1>
+
+  <refsect1>
+    <title>Files</title>
+      <variablelist>
+        <varlistentry>
+          <term><filename>$XDG_RUNTIME_DIR/concats-fuse/</filename></term>
+          <term><filename>$HOME/.concat-fuse/</filename></term>
+          <listitem>
+            <para>Default mount location that <command>vcat</command>
+            for <command>concat-fuse</command></para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
   </refsect1>
 
   <refsect1>

@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH "vcat " 1 "27 February 2015" 0.1.0 "User Commands"
+.TH "vcat " 1 "2 March 2015" 0.2.0 "User Commands"
 .SH NAME
 vcat
 \- Access groups of files as if they were a single large file 
@@ -45,11 +45,38 @@ File Number One
 File Number Two\*(T>
 .fi
 .PP
+The glob pattern can also provided to \fBvcat\fR
+directly instead of being expanded by the Shell, this allows
+circumventing:
+.PP
+.nf
+\*(T<bash: /home/ingo/bin/vcat: Argument list too long\*(T>
+.fi
+.PP
+Furthermore \fBtouch\fR'ing the virtual file or
+resubmitting the glob pattern will update the virtual file in
+case new files have arrived matching the pattern. Note that the
+glob pattern needs to be quoted when supplied to
+\fB--glob\fR.
+.PP
+.nf
+\*(T<$ echo "File Number One" > /tmp/1.txt
+$ echo "File Number Two" > /tmp/2.txt
+$ cat $(vcat \-\-glob "/tmp/*.txt")
+File Number One
+File Number Two\*(T>
+.fi
+.PP
 Once done with the virtual file the virtual filesystem can be
 unmounted with:
 .PP
 .nf
 \*(T<$ vcat \-u\*(T>
 .fi
+.SH FILES
+.TP 
+\*(T<\fI$XDG_RUNTIME_DIR/concats\-fuse/\fR\*(T>, \*(T<\fI$HOME/.concat\-fuse/\fR\*(T>
+Default mount location that \fBvcat\fR
+for \fBconcat-fuse\fR
 .SH "SEE ALSO"
 \fBconcat-fuse\fR(1),
