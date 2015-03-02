@@ -52,9 +52,16 @@ traverse_simple_directory(SimpleDirectory& directory,
 ConcatVFS::ConcatVFS() :
   m_mutex(),
   m_entries(),
-  m_root(new SimpleDirectory)
+  m_root()
 {
   add_entry("/", m_root.get());
+}
+
+void
+ConcatVFS::set_root(std::unique_ptr<SimpleDirectory>&& root)
+{
+  m_root = std::move(root);
+  rebuild_entry_cache();
 }
 
 Entry*
@@ -80,6 +87,7 @@ ConcatVFS::add_entry(const std::string& path, Entry* entry)
 void
 ConcatVFS::rebuild_entry_cache()
 {
+  log_debug("rebuild_entry_cache()");
   m_entries.clear();
   m_entries["/"] = m_root.get();
   traverse_simple_directory(*m_root, m_entries, "/", [this]{ rebuild_entry_cache(); });
@@ -95,7 +103,6 @@ int
 ConcatVFS::getattr(const char* path, struct stat* stbuf)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("getattr({})", path);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -115,7 +122,6 @@ int
 ConcatVFS::utimens(const char* path, const struct timespec tv[2])
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("utimens({})", path);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -132,7 +138,6 @@ int
 ConcatVFS::open(const char* path, struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("open({}, {})", path, fi->fh);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -157,7 +162,6 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("read({}, {}, {}, {}, {})", path, static_cast<void*>(buf), len, offset, fi);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -182,7 +186,6 @@ ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset,
                  struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("write({}) -> {}", path, fi->fh);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -207,7 +210,6 @@ ConcatVFS::flush(const char* path, struct fuse_file_info* fi)
 {
   // called multiple times in a single write
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("flush({})", path);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -232,7 +234,6 @@ ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 {
   // called once for file close
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("release({}) -> {}", path, fi->fh);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -256,7 +257,6 @@ int
 ConcatVFS::opendir(const char* path, struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("opendir({})", path);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -281,7 +281,6 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
                    struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("readdir({})", path);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -305,7 +304,6 @@ int
 ConcatVFS::releasedir(const char* path, struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("releasedir({}, {})", path, fi->fh);
 
   Entry* entry = lookup(path);
   if (entry)
@@ -330,7 +328,6 @@ ConcatVFS::truncate(const char* path, off_t offset)
 {
   // this is called before write and required
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("truncate({}, {})", path, offset);
 
   Entry* entry = lookup(path);
   if (entry)

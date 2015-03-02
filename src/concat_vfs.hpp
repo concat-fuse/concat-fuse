@@ -40,6 +40,8 @@ private:
 public:
   ConcatVFS();
 
+  void set_root(std::unique_ptr<SimpleDirectory>&& root);
+
   Entry* lookup(const std::string& path);
   void add_entry(const std::string& path, Entry* entry);
   void rebuild_entry_cache();

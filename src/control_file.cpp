@@ -65,6 +65,9 @@ ControlFile::open(const char* path, struct fuse_file_info* fi)
   m_tmpbuf.push_back({});
   fi->fh = make_fh(m_tmpbuf.size());
   fi->direct_io = 1;
+
+  log_debug("ControlFile::open {}", fi->fh);
+
   return 0;
 }
 
