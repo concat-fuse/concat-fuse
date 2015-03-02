@@ -43,8 +43,7 @@ public:
   void set_root(std::unique_ptr<SimpleDirectory>&& root);
 
   Entry* lookup(const std::string& path);
-  void add_entry(const std::string& path, Entry* entry);
-  void rebuild_entry_cache();
+  void invalidate_entry_cache();
   SimpleDirectory& get_root() const;
 
   int getattr(const char* path, struct stat* stbuf);
@@ -63,6 +62,9 @@ public:
   int readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
               struct fuse_file_info* fi);
   int releasedir(const char* path, struct fuse_file_info* fi);
+
+private:
+  void rebuild_entry_cache();
 
 private:
   ConcatVFS(const ConcatVFS&) = delete;

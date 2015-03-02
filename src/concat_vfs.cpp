@@ -54,19 +54,23 @@ ConcatVFS::ConcatVFS() :
   m_entries(),
   m_root()
 {
-  add_entry("/", m_root.get());
 }
 
 void
 ConcatVFS::set_root(std::unique_ptr<SimpleDirectory>&& root)
 {
   m_root = std::move(root);
-  rebuild_entry_cache();
+  invalidate_entry_cache();
 }
 
 Entry*
 ConcatVFS::lookup(const std::string& path)
 {
+  if (m_entries.empty())
+  {
+    rebuild_entry_cache();
+  }
+
   auto it = m_entries.find(path);
   if (it == m_entries.end())
   {
@@ -79,9 +83,9 @@ ConcatVFS::lookup(const std::string& path)
 }
 
 void
-ConcatVFS::add_entry(const std::string& path, Entry* entry)
+ConcatVFS::invalidate_entry_cache()
 {
-  m_entries[path] = entry;
+  m_entries.clear();
 }
 
 void
@@ -90,7 +94,7 @@ ConcatVFS::rebuild_entry_cache()
   log_debug("rebuild_entry_cache()");
   m_entries.clear();
   m_entries["/"] = m_root.get();
-  traverse_simple_directory(*m_root, m_entries, "/", [this]{ rebuild_entry_cache(); });
+  traverse_simple_directory(*m_root, m_entries, "/", [this]{ invalidate_entry_cache(); });
 }
 
 SimpleDirectory&

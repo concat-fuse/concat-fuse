@@ -28,18 +28,18 @@
 TEST(ConcatVFSTest, entry_cache)
 {
   auto vfs = make_unique<ConcatVFS>();
-  SimpleDirectory& root = vfs->get_root();
+  auto root = make_unique<SimpleDirectory>();
   {
     auto from_file_dir = make_unique<SimpleDirectory>();
     from_file_dir->add_file("control", make_unique<SimpleFile>("SimpleFile1"));
-    root.add_directory("from-file0", std::move(from_file_dir));
+    root->add_directory("from-file0", std::move(from_file_dir));
   }
   {
     auto dir = make_unique<SimpleDirectory>();
     dir->add_file("control", make_unique<SimpleFile>("SimpleFile2"));
-    root.add_directory("from-glob0", std::move(dir));
+    root->add_directory("from-glob0", std::move(dir));
   }
-  vfs->rebuild_entry_cache();
+  vfs->set_root(std::move(root));
 
   EXPECT_TRUE(vfs->lookup("/") != nullptr);
   EXPECT_TRUE(vfs->lookup("/from-glob0") != nullptr);
