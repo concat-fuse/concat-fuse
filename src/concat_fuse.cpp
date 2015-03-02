@@ -155,7 +155,7 @@ init_concat_fuse_root()
 {
   auto root = make_unique<SimpleDirectory>();
 
-  root->add_file("README", make_unique<SimpleFile>("concat-fuse\n-----------\n"));
+  root->add_file("VERSION", make_unique<SimpleFile>("2\n"));
 
   auto from_file_dir = make_unique<SimpleDirectory>();
   from_file_dir->add_file("control", make_unique<ControlFile>(*from_file_dir, ControlFile::LIST_MODE));
