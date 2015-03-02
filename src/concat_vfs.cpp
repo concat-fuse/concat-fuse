@@ -22,117 +22,99 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "simple_file_list.hpp"
 #include "glob_file_list.hpp"
 #include "multi_file.hpp"
+#include "simple_directory.hpp"
+#include "simple_file_list.hpp"
 #include "util.hpp"
 
-namespace {
-
-enum class FileHandleType { FILE0_CONTROL_TYPE = 1<<0, GLOB0_CONTROL_TYPE = 1<<2 };
-
-size_t fh2idx(uint64_t handle)
+void
+traverse_simple_directory(SimpleDirectory& directory,
+                          std::unordered_map<std::string, Entry*>& m_entries,
+                          const std::string& basedir,
+                          const std::function<void ()>& on_change)
 {
-  return static_cast<size_t>(handle & UINT64_C(0x00ffffffffffffff)) - 1;
-}
+  directory.set_on_change(on_change);
 
-/*
-bool is_fh_type(uint64_t handle, FileHandleType t)
-{
-  return handle & (static_cast<uint64_t>(t) << 61);
-}
-*/
+  for(const auto& files : directory.get_files())
+  {
+    m_entries[path_join(basedir, files.first)] = files.second.get();
+  }
 
-uint64_t make_fh(FileHandleType t, size_t v)
-{
-  return (static_cast<uint64_t>(t) << 61) | static_cast<uint64_t>(v);
+  for(const auto& dir : directory.get_directories())
+  {
+    std::string path = path_join(basedir, dir.first);
+    m_entries[path] = dir.second.get();
+    traverse_simple_directory(static_cast<SimpleDirectory&>(*dir.second), m_entries, path, on_change);
+  }
 }
-
-} // namespace
 
 ConcatVFS::ConcatVFS() :
   m_mutex(),
-  m_from_file0_tmpbuf(),
-  m_from_file0_multi_files(),
-  m_from_glob0_tmpbuf(),
-  m_from_glob0_multi_files()
-{}
+  m_entries(),
+  m_root()
+{
+}
+
+void
+ConcatVFS::set_root(std::unique_ptr<SimpleDirectory>&& root)
+{
+  m_root = std::move(root);
+  invalidate_entry_cache();
+}
+
+Entry*
+ConcatVFS::lookup(const std::string& path)
+{
+  if (m_entries.empty())
+  {
+    rebuild_entry_cache();
+  }
+
+  auto it = m_entries.find(path);
+  if (it == m_entries.end())
+  {
+    return nullptr;
+  }
+  else
+  {
+    return it->second;
+  }
+}
+
+void
+ConcatVFS::invalidate_entry_cache()
+{
+  m_entries.clear();
+}
+
+void
+ConcatVFS::rebuild_entry_cache()
+{
+  log_debug("rebuild_entry_cache()");
+  m_entries.clear();
+  m_entries["/"] = m_root.get();
+  traverse_simple_directory(*m_root, m_entries, "/", [this]{ invalidate_entry_cache(); });
+}
+
+SimpleDirectory&
+ConcatVFS::get_root() const
+{
+  return *m_root;
+}
 
 int
 ConcatVFS::getattr(const char* path, struct stat* stbuf)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  log_debug("getattr({})", path);
-
-  memset(stbuf, 0, sizeof(*stbuf));
-
-  stbuf->st_uid = fuse_get_context()->uid;
-  stbuf->st_gid = fuse_get_context()->gid;
-
-  if (strcmp(path, "/") == 0 ||
-      strcmp(path, "/from-file0") == 0 ||
-      strcmp(path, "/from-glob0") == 0)
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    stbuf->st_mode = S_IFDIR | 0755;
-    stbuf->st_nlink = 2;
-    return 0;
-  }
-  else if (has_prefix(path, "/from-file0/"))
-  {
-    if (strcmp(path, "/from-file0/control") == 0)
-    {
-      stbuf->st_mode = S_IFREG | 0644;
-      stbuf->st_nlink = 2;
-      stbuf->st_size = 0;
-      return 0;
-    }
-    else
-    {
-      std::string filename = path + strlen("/from-file0/");
-
-      auto it = m_from_file0_multi_files.find(filename);
-      if (it == m_from_file0_multi_files.end())
-      {
-        return -ENOENT;
-      }
-      else
-      {
-        stbuf->st_mode = S_IFREG | 0444;
-        stbuf->st_nlink = 2;
-        stbuf->st_size = it->second->get_size();
-        stbuf->st_mtim = it->second->get_mtime();
-        return 0;
-      }
-    }
-  }
-  else if (has_prefix(path, "/from-glob0/"))
-  {
-    if (strcmp(path, "/from-glob0/control") == 0)
-    {
-      stbuf->st_mode = S_IFREG | 0644;
-      stbuf->st_nlink = 2;
-      stbuf->st_size = 0;
-      return 0;
-    }
-    else
-    {
-      std::string filename = path + strlen("/from-glob0/");
-
-      auto it = m_from_glob0_multi_files.find(filename);
-      if (it == m_from_glob0_multi_files.end())
-      {
-        return -ENOENT;
-      }
-      else
-      {
-        stbuf->st_mode = S_IFREG | 0444;
-        stbuf->st_nlink = 2;
-        stbuf->st_size = it->second->get_size();
-        stbuf->st_mtim = it->second->get_mtime();
-        return 0;
-      }
-    }
+    memset(stbuf, 0, sizeof(*stbuf));
+    stbuf->st_uid = fuse_get_context()->uid;
+    stbuf->st_gid = fuse_get_context()->gid;
+    return entry->getattr(path, stbuf);
   }
   else
   {
@@ -144,39 +126,15 @@ int
 ConcatVFS::utimens(const char* path, const struct timespec tv[2])
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("utimens({})", path);
 
-  if (has_prefix(path, "/from-file0/"))
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    std::string filename = path + strlen("/from-file0/");
-    auto it = m_from_file0_multi_files.find(filename);
-    if (it == m_from_file0_multi_files.end())
-    {
-      return -ENOENT;
-    }
-    else
-    {
-      it->second->refresh();
-      return 0;
-    }
-  }
-  else if (has_prefix(path, "/from-glob0/"))
-  {
-    std::string filename = path + strlen("/from-glob0/");
-    auto it = m_from_glob0_multi_files.find(filename);
-    if (it == m_from_glob0_multi_files.end())
-    {
-      return -ENOENT;
-    }
-    else
-    {
-      it->second->refresh();
-      return 0;
-    }
+    return entry->utimens(path, tv);
   }
   else
   {
-    return -ENOSYS;
+    return -ENOENT;
   }
 }
 
@@ -184,59 +142,22 @@ int
 ConcatVFS::open(const char* path, struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("open({}, {})", path, fi->fh);
 
-  if (has_prefix(path, "/from-file0/"))
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    if (strcmp(path, "/from-file0/control") == 0)
+    if (File* file = dynamic_cast<File*>(entry))
     {
-      fi->direct_io = 1;
-
-      m_from_file0_tmpbuf.push_back("");
-      fi->fh = make_fh(FileHandleType::FILE0_CONTROL_TYPE, m_from_file0_tmpbuf.size());
-      return 0;
+      return file->open(path, fi);
     }
     else
     {
-      std::string filename = path + strlen("/from-file0/");
-      auto it = m_from_file0_multi_files.find(filename);
-      if (it == m_from_file0_multi_files.end())
-      {
-        return -ENOENT;
-      }
-      else
-      {
-        return 0;
-      }
-    }
-  }
-  else if (has_prefix(path, "/from-glob0/"))
-  {
-    if (strcmp(path, "/from-glob0/control") == 0)
-    {
-      fi->direct_io = 1;
-
-      m_from_glob0_tmpbuf.push_back("");
-      fi->fh = make_fh(FileHandleType::GLOB0_CONTROL_TYPE, m_from_glob0_tmpbuf.size());
-      return 0;
-    }
-    else
-    {
-      std::string filename = path + strlen("/from-glob0/");
-      auto it = m_from_glob0_multi_files.find(filename);
-      if (it == m_from_glob0_multi_files.end())
-      {
-        return -ENOENT;
-      }
-      else
-      {
-        return 0;
-      }
+      return -EISDIR;
     }
   }
   else
   {
-    return 0;
+    return -ENOENT;
   }
 }
 
@@ -245,46 +166,17 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("read({}, {}, {}, {}, {})", path, static_cast<void*>(buf), len, offset, fi);
 
-  if (has_prefix(path, "/from-file0/"))
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    if (strcmp(path, "/from-file0/control") == 0)
+    if (File* file = dynamic_cast<File*>(entry))
     {
-      return -EPERM;
+      return file->read(path, buf, len, offset, fi);
     }
     else
     {
-      std::string filename = path + strlen("/from-file0/");
-      auto it = m_from_file0_multi_files.find(filename);
-      if (it != m_from_file0_multi_files.end())
-      {
-        return static_cast<int>(it->second->read(static_cast<size_t>(offset), buf, len));
-      }
-      else
-      {
-        return 0;
-      }
-    }
-  }
-  else if (has_prefix(path, "/from-glob0/"))
-  {
-    if (strcmp(path, "/from-glob0/control") == 0)
-    {
-      return -EPERM;
-    }
-    else
-    {
-      std::string filename = path + strlen("/from-glob0/");
-      auto it = m_from_glob0_multi_files.find(filename);
-      if (it != m_from_glob0_multi_files.end())
-      {
-        return static_cast<int>(it->second->read(static_cast<size_t>(offset), buf, len));
-      }
-      else
-      {
-        return 0;
-      }
+      return -EISDIR;
     }
   }
   else
@@ -293,21 +185,23 @@ ConcatVFS::read(const char* path, char* buf, size_t len, off_t offset,
   }
 }
 
-int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset,
-                     struct fuse_file_info* fi)
+int
+ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset,
+                 struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("write({}) -> {}", path, fi->fh);
 
-  if (strcmp(path, "/from-file0/control") == 0)
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    m_from_file0_tmpbuf[fh2idx(fi->fh)].append(buf, len);
-    return static_cast<int>(len);
-  }
-  else if (strcmp(path, "/from-glob0/control") == 0)
-  {
-    m_from_glob0_tmpbuf[fh2idx(fi->fh)].append(buf, len);
-    return static_cast<int>(len);
+    if (File* file = dynamic_cast<File*>(entry))
+    {
+      return file->write(path, buf, len, offset, fi);
+    }
+    else
+    {
+      return -EISDIR;
+    }
   }
   else
   {
@@ -315,71 +209,75 @@ int ConcatVFS::write(const char* path, const char* buf, size_t len, off_t offset
   }
 }
 
-int ConcatVFS::flush(const char* path, struct fuse_file_info*)
+int
+ConcatVFS::flush(const char* path, struct fuse_file_info* fi)
 {
-  std::lock_guard<std::mutex> lock(m_mutex);
   // called multiple times in a single write
-  log_debug("flush({})", path);
-  return 0;
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  Entry* entry = lookup(path);
+  if (entry)
+  {
+    if (File* file = dynamic_cast<File*>(entry))
+    {
+      return file->flush(path, fi);
+    }
+    else
+    {
+      return -EISDIR;
+    }
+  }
+  else
+  {
+    return -ENOENT;
+  }
 }
 
 int
 ConcatVFS::release(const char* path, struct fuse_file_info* fi)
 {
-  std::lock_guard<std::mutex> lock(m_mutex);
   // called once for file close
-  log_debug("release({}) -> {}", path, fi->fh);
+  std::lock_guard<std::mutex> lock(m_mutex);
 
-  if (strcmp(path, "/from-file0/control") == 0)
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    const std::string& data = m_from_file0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
-    std::string sha1 = sha1sum(data);
-
-    log_debug("RECEIVED: {}", sha1);
-
-    auto it = m_from_file0_multi_files.find(sha1);
-    if (it == m_from_file0_multi_files.end())
+    if (File* file = dynamic_cast<File*>(entry))
     {
-      m_from_file0_multi_files[sha1] = make_unique<MultiFile>(make_unique<SimpleFileList>(split(data, '\0')));
-      return 0;
+      return file->release(path, fi);
     }
     else
     {
-      // do nothing, multifile is already there
-      return 0;
-    }
-  }
-  else if (strcmp(path, "/from-glob0/control") == 0)
-  {
-    const std::string& data = m_from_glob0_tmpbuf[static_cast<size_t>(fi->fh - 1)];
-    std::string sha1 = sha1sum(data);
-
-    log_debug("RECEIVED: {}", sha1);
-
-    auto it = m_from_glob0_multi_files.find(sha1);
-    if (it == m_from_glob0_multi_files.end())
-    {
-      m_from_glob0_multi_files[sha1] = make_unique<MultiFile>(make_unique<GlobFileList>(split(data, '\0')));
-      return 0;
-    }
-    else
-    {
-      it->second->refresh();
-      return 0;
+      return -EISDIR;
     }
   }
   else
   {
-    return 0;
+    return -ENOENT;
   }
 }
 
 int
-ConcatVFS::opendir(const char* path, struct fuse_file_info*)
+ConcatVFS::opendir(const char* path, struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("opendir({})", path);
-  return 0;
+
+  Entry* entry = lookup(path);
+  if (entry)
+  {
+    if (Directory* directory = dynamic_cast<Directory*>(entry))
+    {
+      return directory->opendir(path, fi);
+    }
+    else
+    {
+      return -ENOTDIR;
+    }
+  }
+  else
+  {
+    return -ENOENT;
+  }
 }
 
 int
@@ -387,37 +285,18 @@ ConcatVFS::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
                    struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("readdir({})", path);
 
-  if (strcmp(path, "/") == 0)
+  Entry* entry = lookup(path);
+  if (entry)
   {
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-    filler(buf, "from-file0", NULL, 0);
-    filler(buf, "from-glob0", NULL, 0);
-    return 0;
-  }
-  else if (strcmp(path, "/from-file0") == 0)
-  {
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-    filler(buf, "control", NULL, 0);
-    for(const auto& it : m_from_file0_multi_files)
+    if (Directory* directory = dynamic_cast<Directory*>(entry))
     {
-      filler(buf, it.first.c_str(), NULL, 0);
+      return directory->readdir(path, buf, filler, offset, fi);
     }
-    return 0;
-  }
-  else if (strcmp(path, "/from-glob0") == 0)
-  {
-    filler(buf, ".", NULL, 0);
-    filler(buf, "..", NULL, 0);
-    filler(buf, "control", NULL, 0);
-    for(const auto& it : m_from_glob0_multi_files)
+    else
     {
-      filler(buf, it.first.c_str(), NULL, 0);
+      return -ENOTDIR;
     }
-    return 0;
   }
   else
   {
@@ -429,17 +308,47 @@ int
 ConcatVFS::releasedir(const char* path, struct fuse_file_info* fi)
 {
   std::lock_guard<std::mutex> lock(m_mutex);
-  log_debug("releasedir({}, {})", path, fi->fh);
-  return 0;
+
+  Entry* entry = lookup(path);
+  if (entry)
+  {
+    if (Directory* directory = dynamic_cast<Directory*>(entry))
+    {
+      return directory->releasedir(path, fi);
+    }
+    else
+    {
+      return -ENOTDIR;
+    }
+  }
+  else
+  {
+    return -ENOENT;
+  }
 }
 
 int
 ConcatVFS::truncate(const char* path, off_t offset)
 {
-  std::lock_guard<std::mutex> lock(m_mutex);
   // this is called before write and required
-  log_debug("releasedir({}, {})", path, offset);
-  return 0;
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  Entry* entry = lookup(path);
+  if (entry)
+  {
+    if (File* file = dynamic_cast<File*>(entry))
+    {
+      return file->truncate(path, offset);
+    }
+    else
+    {
+      return -ENOTDIR;
+    }
+  }
+  else
+  {
+    return -ENOENT;
+  }
 }
 
 /* EOF */

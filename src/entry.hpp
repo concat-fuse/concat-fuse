@@ -14,42 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "glob_file_list.hpp"
+#ifndef HEADER_ENTRY_HPP
+#define HEADER_ENTRY_HPP
 
-#include <glob.h>
+class ConcatVFS;
 
-#include "util.hpp"
-
-GlobFileList::GlobFileList(const std::vector<std::string>& globs) :
-  m_globs(globs)
+class Entry
 {
-}
+public:
+  Entry() {}
+  virtual ~Entry() {}
 
-std::vector<FileInfo>
-GlobFileList::scan() const
-{
-  std::vector<FileInfo> result;
+  virtual int getattr(const char* path, struct stat* stbuf) { return -ENOSYS; }
+  virtual int utimens(const char* path, const struct timespec tv[2]) { return -ENOSYS; }
 
-  for(const auto& pattern : m_globs)
-  {
-    glob_t glob_data;
+private:
+  Entry(const Entry&) = delete;
+  Entry& operator=(const Entry&) = delete;
+};
 
-    int ret = glob(pattern.c_str(), 0, nullptr, &glob_data);
-    if (ret == GLOB_NOMATCH)
-    {
-      log_debug("no matching files found for pattern: \"{}\"", pattern);
-    }
-    else
-    {
-      for(size_t i = 0; i < glob_data.gl_pathc; ++i)
-      {
-        result.push_back({glob_data.gl_pathv[i], get_file_size(glob_data.gl_pathv[i])});
-      }
-    }
-    globfree(&glob_data);
-  }
-
-  return result;
-}
+#endif
 
 /* EOF */

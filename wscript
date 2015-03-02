@@ -55,7 +55,7 @@ def configure(conf):
     if not conf.check_cfg(package='mhash', args=['--cflags', '--libs'], mandatory=False):
         conf.check(lib="mhash")
 
-    conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O3", "-g"])
+    conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O0", "-g"])
 
     if conf.options.developer:
         conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
@@ -72,9 +72,13 @@ def build(bld):
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",
                       "src/concat_vfs.cpp",
-                      "src/multi_file.cpp",
-                      "src/simple_file_list.cpp",
+                      "src/control_file.cpp",
+                      "src/directory.cpp",
                       "src/glob_file_list.cpp",
+                      "src/multi_file.cpp",
+                      "src/simple_directory.cpp",
+                      "src/simple_file.cpp",
+                      "src/simple_file_list.cpp",
                       "src/util.cpp"],
               use=["WARNINGS", "FUSE", "MHASH"])
 

@@ -18,28 +18,33 @@
 #define HEADER_CONCAT_VFS_HPP
 
 #include <fuse.h>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
 #include <mutex>
 
+#include "directory.hpp"
 #include "multi_file.hpp"
+
+class SimpleDirectory;
 
 class ConcatVFS
 {
 private:
   std::mutex m_mutex;
-
-  std::vector<std::string> m_from_file0_tmpbuf;
-  std::map<std::string, std::unique_ptr<MultiFile> > m_from_file0_multi_files;
-
-  std::vector<std::string> m_from_glob0_tmpbuf;
-  std::map<std::string, std::unique_ptr<MultiFile> > m_from_glob0_multi_files;
+  std::unordered_map<std::string, Entry*> m_entries;
+  std::unique_ptr<SimpleDirectory> m_root;
 
 public:
   ConcatVFS();
+
+  void set_root(std::unique_ptr<SimpleDirectory>&& root);
+
+  Entry* lookup(const std::string& path);
+  void invalidate_entry_cache();
+  SimpleDirectory& get_root() const;
 
   int getattr(const char* path, struct stat* stbuf);
   int utimens(const char* path, const struct timespec tv[2]);
@@ -57,6 +62,9 @@ public:
   int readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
               struct fuse_file_info* fi);
   int releasedir(const char* path, struct fuse_file_info* fi);
+
+private:
+  void rebuild_entry_cache();
 
 private:
   ConcatVFS(const ConcatVFS&) = delete;

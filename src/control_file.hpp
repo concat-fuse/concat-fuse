@@ -14,51 +14,40 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_MULTI_FILE_HPP
-#define HEADER_MULTI_FILE_HPP
+#ifndef HEADER_CONTROL_FILE_HPP
+#define HEADER_CONTROL_FILE_HPP
 
-#include <memory>
-#include <string>
-#include <sys/types.h>
 #include <vector>
 
-#include "file_list.hpp"
 #include "file.hpp"
 
-class MultiFile : public File
-{
-private:
-  size_t m_pos;
-  struct timespec m_mtime;
+class SimpleDirectory;
 
-  std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
+class ControlFile : public File
+{
+public:
+  enum  Mode { GLOB_MODE, LIST_MODE };
+
+private:
+  SimpleDirectory& m_directory;
+  Mode m_mode;
+  std::vector<std::string> m_tmpbuf;
 
 public:
-  MultiFile(std::unique_ptr<FileList> file_list);
-
-  ssize_t read(size_t pos, char* buf, size_t count);
-  size_t get_size() const;
-  struct timespec get_mtime() const;
-  void refresh();
+  ControlFile(SimpleDirectory& directory, Mode mode);
+  ~ControlFile();
 
   int getattr(const char* path, struct stat* stbuf) override;
-  int utimens(const char* path, const struct timespec tv[2]) override;
 
   int open(const char* path, struct fuse_file_info* fi) override;
+  int write(const char* path, const char* buf, size_t len, off_t offset,
+                    struct fuse_file_info* fi) override;
+  int truncate(const char* path, off_t offsite) override;
   int release(const char* path, struct fuse_file_info* fi) override;
 
-  int read(const char* path, char* buf, size_t len, off_t offset,
-           struct fuse_file_info* fi) override;
-
 private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
-
-private:
-  MultiFile(const MultiFile&) = delete;
-  MultiFile& operator=(const MultiFile&) = delete;
+  ControlFile(const ControlFile&) = delete;
+  ControlFile& operator=(const ControlFile&) = delete;
 };
 
 #endif

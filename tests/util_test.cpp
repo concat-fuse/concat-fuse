@@ -26,60 +26,60 @@ TEST(UtilTest, is_hex)
   std::string validhex = "0123456789abcdefABCDEF";
   for(size_t i = 0; i < validhex.size(); ++i)
   {
-    ASSERT_TRUE(is_hex(validhex[i]));
+    EXPECT_TRUE(is_hex(validhex[i]));
   }
 
   std::string invalidhex = "xyzXZY-+!@#";
   for(size_t i = 0; i < invalidhex.size(); ++i)
   {
-    ASSERT_FALSE(is_hex(invalidhex[i]));
+    EXPECT_FALSE(is_hex(invalidhex[i]));
   }
 }
 
 TEST(UtilTest, hex2int)
 {
-  ASSERT_EQ(hex2int('0'), 0);
-  ASSERT_EQ(hex2int('1'), 1);
-  ASSERT_EQ(hex2int('2'), 2);
-  ASSERT_EQ(hex2int('3'), 3);
-  ASSERT_EQ(hex2int('a'), 10);
-  ASSERT_EQ(hex2int('b'), 11);
-  ASSERT_EQ(hex2int('c'), 12);
-  ASSERT_EQ(hex2int('d'), 13);
-  ASSERT_EQ(hex2int('e'), 14);
-  ASSERT_EQ(hex2int('f'), 15);
-  ASSERT_EQ(hex2int('A'), 10);
-  ASSERT_EQ(hex2int('B'), 11);
-  ASSERT_EQ(hex2int('C'), 12);
-  ASSERT_EQ(hex2int('D'), 13);
-  ASSERT_EQ(hex2int('E'), 14);
-  ASSERT_EQ(hex2int('F'), 15);
+  EXPECT_EQ(0, hex2int('0'));
+  EXPECT_EQ(1, hex2int('1'));
+  EXPECT_EQ(2, hex2int('2'));
+  EXPECT_EQ(3, hex2int('3'));
+  EXPECT_EQ(10, hex2int('a'));
+  EXPECT_EQ(11, hex2int('b'));
+  EXPECT_EQ(12, hex2int('c'));
+  EXPECT_EQ(13, hex2int('d'));
+  EXPECT_EQ(14, hex2int('e'));
+  EXPECT_EQ(15, hex2int('f'));
+  EXPECT_EQ(10, hex2int('A'));
+  EXPECT_EQ(11, hex2int('B'));
+  EXPECT_EQ(12, hex2int('C'));
+  EXPECT_EQ(13, hex2int('D'));
+  EXPECT_EQ(14, hex2int('E'));
+  EXPECT_EQ(15, hex2int('F'));
 }
 
 TEST(UtilTest, url_quote)
 {
-  ASSERT_EQ(url_quote("hello/world"), "hello%2fworld");
-  ASSERT_EQ(url_quote("hello world"), "hello%20world");
+  EXPECT_EQ("hello%2fworld", url_quote("hello/world"));
+  EXPECT_EQ("hello%20world", url_quote("hello world"));
 }
 
 TEST(UtilTest, url_unquote)
 {
-  ASSERT_EQ(url_unquote("hello%2fworld"), "hello/world");
-  ASSERT_EQ(url_unquote("hello%2Fworld"), "hello/world");
+  EXPECT_EQ("hello/world", url_unquote("hello%2fworld"));
+  EXPECT_EQ("hello/world", url_unquote("hello%2Fworld"));
 }
 
 TEST(UtilTest, has_prefix)
 {
-  ASSERT_TRUE(has_prefix("foobar", "foo"));
-  ASSERT_TRUE(has_prefix("foo", "foo"));
-  ASSERT_FALSE(has_prefix("barfoo", "foo"));
-  ASSERT_FALSE(has_prefix("foo", "foobar"));
+  EXPECT_TRUE(has_prefix("foobar", "foo"));
+  EXPECT_TRUE(has_prefix("foo", "foo"));
+  EXPECT_FALSE(has_prefix("barfoo", "foo"));
+  EXPECT_FALSE(has_prefix("foo", "foobar"));
 }
 
 TEST(UtilTest, sha1sum)
 {
-  ASSERT_EQ(sha1sum("", 0), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
-  ASSERT_EQ(sha1sum("Hello World", 11), "0a4d55a8d778e5022fab701977c5d840bbc486d0");
+  EXPECT_EQ("da39a3ee5e6b4b0d3255bfef95601890afd80709", sha1sum("", 0));
+  EXPECT_EQ("0a4d55a8d778e5022fab701977c5d840bbc486d0", sha1sum("Hello World", 11));
 }
 
 TEST(UtilTest, split)
@@ -89,14 +89,21 @@ TEST(UtilTest, split)
   std::vector<std::string> not_empty_result{" "};
   std::vector<std::string> empty_result;
 
-  ASSERT_NE(split("Hello\nWorld", '\n'), multi_result);
-  ASSERT_EQ(split("Hello\nWorld\nFoobar\n", '\n'), multi_result);
-  ASSERT_EQ(split("Hello\nWorld\nFoobar", '\n'), multi_result);
-  ASSERT_EQ(split(std::string("Hello\0World\0Foobar", 18), '\0'), multi_result);
-  ASSERT_EQ(split("", '\n'), empty_result);
-  ASSERT_EQ(split(" ", '\n'), not_empty_result);
-  ASSERT_EQ(split("One", '\n'), one_result);
-  ASSERT_EQ(split("One\n", '\n'), one_result);
+  EXPECT_NE(multi_result, split("Hello\nWorld", '\n'));
+  EXPECT_EQ(multi_result, split("Hello\nWorld\nFoobar\n", '\n'));
+  EXPECT_EQ(multi_result, split("Hello\nWorld\nFoobar", '\n'));
+  EXPECT_EQ(multi_result, split(std::string("Hello\0World\0Foobar", 18), '\0'));
+  EXPECT_EQ(empty_result, split("", '\n'));
+  EXPECT_EQ(not_empty_result, split(" ", '\n'));
+  EXPECT_EQ(one_result, split("One", '\n'));
+  EXPECT_EQ(one_result, split("One\n", '\n'));
+}
+
+TEST(UtilTest, path_join)
+{
+  EXPECT_EQ("/name", path_join("/", "name"));
+  EXPECT_EQ("/foo/bar", path_join("/foo", "bar"));
+  EXPECT_EQ("/foo/bar", path_join("/foo/", "bar"));
 }
 
 /* EOF */
