@@ -93,7 +93,7 @@ MultiFile::read(size_t pos, char* buf, size_t count)
     log_debug("found file: {} {} {} {}", pos, idx, offset, count);
     if (idx < 0)
     {
-      log_debug("EOF reached");
+      log_debug("EOF reached: {}", total_count);
       return total_count;
     }
     else
@@ -148,6 +148,18 @@ int
 MultiFile::utimens(const char* path, const struct timespec tv[2])
 {
   refresh();
+  return 0;
+}
+
+int
+MultiFile::open(const char* path, struct fuse_file_info* fi)
+{
+  return 0;
+}
+
+int
+MultiFile::release(const char* path, struct fuse_file_info* fi)
+{
   return 0;
 }
 

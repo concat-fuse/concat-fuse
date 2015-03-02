@@ -29,6 +29,10 @@ public:
   virtual ~SimpleFile();
 
   int getattr(const char* path, struct stat* stbuf) override;
+
+  int open(const char* path, struct fuse_file_info* fi) override;
+  int release(const char* path, struct fuse_file_info* fi) override;
+
   int read(const char* path, char* buf, size_t len, off_t offset,
            struct fuse_file_info* fi) override;
   int flush(const char* path, struct fuse_file_info* fi) override;
