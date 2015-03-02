@@ -17,6 +17,9 @@
 #ifndef HEADER_SIMPLE_DIRECTORY_HPP
 #define HEADER_SIMPLE_DIRECTORY_HPP
 
+#include <unordered_map>
+#include <string>
+
 #include "directory.hpp"
 
 class SimpleDirectory : public Directory

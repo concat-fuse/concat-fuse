@@ -192,7 +192,7 @@ size_t get_file_size(const std::string& filename)
   }
   else
   {
-    return buf.st_size;
+    return static_cast<size_t>(buf.st_size);
   }
 }
 

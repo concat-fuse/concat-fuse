@@ -42,6 +42,7 @@ MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
 void
 MultiFile::refresh()
 {
+  log_debug("MultiFile::refresh()");
   m_files = m_file_list->scan();
   clock_gettime(CLOCK_REALTIME, &m_mtime);
 }

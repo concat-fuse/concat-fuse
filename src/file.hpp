@@ -18,6 +18,7 @@
 #define HEADER_FILE_HPP
 
 #include <memory>
+#include <errno.h>
 
 #include "entry.hpp"
 

@@ -16,6 +16,7 @@
 
 #include "control_file.hpp"
 
+#include <stdint.h>
 #include <sys/stat.h>
 #include <fuse.h>
 
@@ -29,12 +30,12 @@ namespace {
 
 uint64_t make_fh(size_t v)
 {
-  return v;
+  return static_cast<uint64_t>(v);
 }
 
 size_t fh2idx(uint64_t handle)
 {
-  return handle - 1;
+  return static_cast<size_t>(handle - UINT64_C(1));
 }
 
 } // namespace

@@ -17,6 +17,9 @@
 #ifndef HEADER_ENTRY_HPP
 #define HEADER_ENTRY_HPP
 
+#include <sys/types.h>
+#include <time.h>
+
 class ConcatVFS;
 
 class Entry

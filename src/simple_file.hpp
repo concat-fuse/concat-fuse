@@ -17,6 +17,8 @@
 #ifndef HEADER_SIMPLE_FILE_HPP
 #define HEADER_SIMPLE_FILE_HPP
 
+#include <string>
+
 #include "file.hpp"
 
 class SimpleFile : public File

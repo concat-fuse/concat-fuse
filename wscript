@@ -55,7 +55,10 @@ def configure(conf):
     if not conf.check_cfg(package='mhash', args=['--cflags', '--libs'], mandatory=False):
         conf.check(lib="mhash")
 
+    conf.check(lib="rt")
+
     conf.env.append_value('CXXFLAGS', ["-std=c++11", "-O0", "-g"])
+    conf.env.append_value('DEFINES', ["__STDC_CONSTANT_MACROS"])
 
     if conf.options.developer:
         conf.env.append_value('CXXFLAGS_WARNINGS', developer_cxxflags)
@@ -84,7 +87,7 @@ def build(bld):
 
     bld.program(target="concat-fuse",
                 source=["src/main.cpp"],
-                use=["WARNINGS", "concat_fuse", "FUSE", "MHASH"])
+                use=["WARNINGS", "concat_fuse", "FUSE", "MHASH", "RT"])
 
     if bld.env.build_tests:
         bld.stlib(target="gtest",
@@ -101,7 +104,7 @@ def build(bld):
                     source=glob("tests/*_test.cpp"),
                     includes=["src/"],
                     cxxflags=["-isystem", bld.path.find_dir("external/gtest-1.7.0/include/").abspath()],
-                    use=(["gtest", "gtest_main", "concat_fuse", "MHASH"]),
+                    use=(["gtest", "gtest_main", "concat_fuse", "MHASH", "RT"]),
                     install_path=None)
 
 
