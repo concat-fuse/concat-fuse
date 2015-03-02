@@ -81,17 +81,17 @@ int
 SimpleDirectory::readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
                          struct fuse_file_info* fi)
 {
-  filler(buf, ".", NULL, 0);
-  filler(buf, "..", NULL, 0);
+  filler(buf, ".", nullptr, 0);
+  filler(buf, "..", nullptr, 0);
 
   for(const auto& it : m_directories)
   {
-    filler(buf, it.first.c_str(), NULL, 0);
+    filler(buf, it.first.c_str(), nullptr, 0);
   }
 
   for(const auto& it : m_files)
   {
-    filler(buf, it.first.c_str(), NULL, 0);
+    filler(buf, it.first.c_str(), nullptr, 0);
   }
 
   return 0;

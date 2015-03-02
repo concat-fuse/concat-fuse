@@ -34,7 +34,7 @@ GlobFileList::scan() const
   {
     glob_t glob_data;
 
-    int ret = glob(pattern.c_str(), 0, NULL, &glob_data);
+    int ret = glob(pattern.c_str(), 0, nullptr, &glob_data);
     if (ret == GLOB_NOMATCH)
     {
       log_debug("no matching files found for pattern: \"{}\"", pattern);
