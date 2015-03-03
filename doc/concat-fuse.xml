@@ -46,6 +46,15 @@
   </refsect1>
 
   <refsect1>
+    <title>Options</title>
+    <para>
+      <command>concat-fuse</command> doesn't provide options on it's
+      own, but will accept the general mount options provided by <citerefentry>
+      <refentrytitle>fuse</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+    </para>
+  </refsect1>
+
+  <refsect1>
     <title>Structure</title>
     <para>
       The filesystem, once mounted, provides two subdirectories named
@@ -66,6 +75,10 @@
         <refentrytitle>vcat</refentrytitle>
         <manvolnum>1</manvolnum>
         </citerefentry>,
+        <citerefentry>
+          <refentrytitle>fuse</refentrytitle>
+          <manvolnum>8</manvolnum>
+        </citerefentry>
     </para>
   </refsect1>
 </refentry>

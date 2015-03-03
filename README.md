@@ -2,8 +2,8 @@ concat-fuse
 ===========
 
 `concat-fuse` is a [FUSE](http://fuse.sourceforge.net/) based virtual
-filesystem that allows handling a collection of files as if they were
-a single one. It is essentially doing:
+filesystem for Linux that allows handling a collection of files as if
+they were a single one. It is essentially doing:
 
     cat *.txt > large_file
 
@@ -18,10 +18,21 @@ accessing archive files that have been `split` into multiple parts and
 where a temporary file would be to slow and cumbersome to deal with.
 
 
+Requirements
+------------
+
+* [FUSE](http://fuse.sourceforge.net/)
+* [Mhash](http://mhash.sourceforge.net/)
+
+On Ubuntu 15.04 they can be installed with:
+
+    apt-get install libfuse-dev libmhash-dev
+
+
 Compilation
 -----------
 
-`concat-fuse` requires `libfuse-dev`. Compiling is done with `waf`:
+Compiling is done with `waf`:
 
     ./waf configure
     ./waf
@@ -52,4 +63,5 @@ magic behind the scene, usage is thus very simple:
     File Number One
     File Number Two
 
-The man pages for `concat-fuse` and `vcat` provide further information.
+The man pages for `concat-fuse` and `vcat` provide further information
+and examples.

@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH "vcat " 1 "2 March 2015" 0.2.0 "User Commands"
+.TH "vcat " 1 "3 March 2015" 0.2.0 "User Commands"
 .SH NAME
 vcat
 \- Access groups of files as if they were a single large file 
@@ -34,6 +34,43 @@ playback of video files (when the video format allows it) or for
 accessing archive files that have been `split` into multiple
 parts and where a temporary file would be to slow, large and
 cumbersome to deal with.
+.SH OPTIONS
+.TP 
+\*(T<\fB\-h\fR\*(T>, \*(T<\fB\-\-help\fR\*(T>
+Display help text and exit.
+.TP 
+\*(T<\fB\-u\fR\*(T>, \*(T<\fB\-\-unmount\fR\*(T>
+Unmount concat-fuse
+.TP 
+\*(T<\fB\-e\fR\*(T> \fIEXE\fR, \*(T<\fB\-\-exe\fR\*(T> \fIEXE\fR 
+Use EXE instead of concat-fuse
+.TP 
+\*(T<\fB\-m\fR\*(T> \fIMOUNTPOINT\fR, \*(T<\fB\-\-mountpoint\fR\*(T> \fIMOUNTPOINT\fR
+Use MOUNTPOINT instead of default
+.TP 
+\*(T<\fB\-n\fR\*(T>, \*(T<\fB\-\-dry\-run\fR\*(T>
+Don't send file list to concat-fuse, print to stdout
+.TP 
+\*(T<\fB\-k\fR\*(T>, \*(T<\fB\-\-keep\fR\*(T>
+Continue even when files are missing
+.TP 
+\fIFILES\fR
+Files to virtually concatenate
+.TP 
+\*(T<\fB\-\-from\-file\fR\*(T> \fIFILE\fR
+Read files from FILE, newline separated
+.TP 
+\*(T<\fB\-\-from\-file0\fR\*(T> \fIFILE\fR
+Read files from FILE, \*(T<\e0\*(T> separated
+.TP 
+\*(T<\fB\-\fR\*(T>
+Read files from stdin
+.TP 
+\*(T<\fB\-0\fR\*(T>
+Read files from stdin, '\e0' separated
+.TP 
+\*(T<\fB\-g\fR\*(T> \fIGLOB\fR, \*(T<\fB\-\-glob\fR\*(T> \fIGLOB\fR
+Use glob the given \fIGLOB\fR
 .SH EXAMPLE
 A simple example of \fBvcat\fR use would look like this:
 .PP
@@ -76,7 +113,8 @@ unmounted with:
 .SH FILES
 .TP 
 \*(T<\fI$XDG_RUNTIME_DIR/concats\-fuse/\fR\*(T>, \*(T<\fI$HOME/.concat\-fuse/\fR\*(T>
-Default mount location that \fBvcat\fR
+Default mount location that \fBvcat\fR uses
 for \fBconcat-fuse\fR
 .SH "SEE ALSO"
 \fBconcat-fuse\fR(1),
+\fBfuse\fR(8)

@@ -53,6 +53,98 @@
       cumbersome to deal with.
     </para>
   </refsect1>
+
+  <refsect1>
+    <title>Options</title>
+    <variablelist>
+
+      <varlistentry>
+        <term><option>-h</option>, <option>--help</option></term>
+        <listitem>
+          <para>Display help text and exit.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-u</option>, <option>--unmount</option></term>
+        <listitem>
+          <para>Unmount concat-fuse</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-e</option> <replaceable>EXE</replaceable>, <option>--exe</option> <replaceable>EXE</replaceable> </term>
+        <listitem>
+          <para>Use EXE instead of concat-fuse</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-m</option> <replaceable>MOUNTPOINT</replaceable>,
+        <option>--mountpoint</option> <replaceable>MOUNTPOINT</replaceable></term>
+        <listitem>
+          <para>Use MOUNTPOINT instead of default</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-n</option>, <option>--dry-run</option></term>
+        <listitem>
+          <para>Don't send file list to concat-fuse, print to stdout</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-k</option>, <option>--keep</option></term>
+        <listitem>
+          <para>Continue even when files are missing</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><replaceable>FILES</replaceable></term>
+        <listitem>
+          <para>Files to virtually concatenate</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--from-file</option> <replaceable>FILE</replaceable></term>
+        <listitem>
+          <para>Read files from FILE, newline separated</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--from-file0</option> <replaceable>FILE</replaceable></term>
+        <listitem>
+          <para>Read files from FILE, <code>\0</code> separated</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-</option></term>
+        <listitem>
+          <para>Read files from stdin</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-0</option></term>
+        <listitem>
+          <para>Read files from stdin, '\0' separated</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-g</option> <replaceable>GLOB</replaceable>, <option>--glob</option> <replaceable>GLOB</replaceable></term>
+        <listitem>
+          <para>Use glob the given <replaceable>GLOB</replaceable></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
   <refsect1>
     <title>Example</title>
     <para>
@@ -92,16 +184,16 @@ File Number Two]]></programlisting>
 
   <refsect1>
     <title>Files</title>
-      <variablelist>
-        <varlistentry>
-          <term><filename>$XDG_RUNTIME_DIR/concats-fuse/</filename></term>
-          <term><filename>$HOME/.concat-fuse/</filename></term>
-          <listitem>
-            <para>Default mount location that <command>vcat</command>
-            for <command>concat-fuse</command></para>
-          </listitem>
-        </varlistentry>
-      </variablelist>
+    <variablelist>
+      <varlistentry>
+        <term><filename>$XDG_RUNTIME_DIR/concats-fuse/</filename></term>
+        <term><filename>$HOME/.concat-fuse/</filename></term>
+        <listitem>
+          <para>Default mount location that <command>vcat</command> uses
+          for <command>concat-fuse</command></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
   </refsect1>
 
   <refsect1>
@@ -111,6 +203,10 @@ File Number Two]]></programlisting>
         <refentrytitle>concat-fuse</refentrytitle>
         <manvolnum>1</manvolnum>
         </citerefentry>,
+        <citerefentry>
+          <refentrytitle>fuse</refentrytitle>
+          <manvolnum>8</manvolnum>
+        </citerefentry>
     </para>
   </refsect1>
 </refentry>
