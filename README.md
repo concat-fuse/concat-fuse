@@ -47,8 +47,11 @@ Installation
 
     ./waf install
 
-The options `--prefix=PREFIX` and `--destdir=DESTDIR` are available to
-change the installation directory.
+The install location can be configured with the `PREFIX` and
+`DESTDIR`:
+
+    ./waf configure --prefix=PREFIX
+    ./waf install --destdir=DESTDIR
 
 
 Usage
