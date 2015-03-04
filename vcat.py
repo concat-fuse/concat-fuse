@@ -65,6 +65,15 @@ class ConcatFuse:
         if not os.path.ismount(self.basedir):
             subprocess.check_call([self.concat_fuse_exe, self.basedir])
 
+        self.check_version()
+
+    def check_version(self):
+        expected_version = "2"
+        with open(os.path.join(self.basedir, "VERSION")) as fin:
+            version = fin.read().rstrip()
+        if version != expected_version:
+            raise Exception("incorrect concat-fuse version, expected %s got %s" % (expected_version, version))
+
     def concat(self, files):
         """Send the file list to concat-fuse and return the filename of the virtual file"""
 
