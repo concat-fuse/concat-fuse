@@ -1,4 +1,4 @@
-all: vcat.1 concat-fuse.1
+all: cfconcat.1 concat-fuse.1
 
 %.1: %.xml Makefile
 	echo "<!ENTITY concat_version \"$$(cat ../VERSION)\">" > concat.ent

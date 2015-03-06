@@ -69,8 +69,8 @@ def configure(conf):
 
 
 def build(bld):
-    bld.install_as('${PREFIX}/bin/vcat', ['vcat.py'], chmod=0755)
-    bld.install_files('${MANDIR}/man1', ["doc/vcat.1", "doc/concat-fuse.1"])
+    bld.install_as('${PREFIX}/bin/cfconcat', ['cfconcat.py'], chmod=0755)
+    bld.install_files('${MANDIR}/man1', ["doc/cfconcat.1", "doc/concat-fuse.1"])
 
     bld.stlib(target="concat_fuse",
               source=["src/concat_fuse.cpp",

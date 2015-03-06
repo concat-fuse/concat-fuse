@@ -57,14 +57,14 @@ The install location can be configured with the `PREFIX` and
 Usage
 -----
 
-`concat-fuse` comes with a little script `vcat` that does the mounting
+`concat-fuse` comes with a little script `cfconcat` that does the mounting
 magic behind the scene, usage is thus very simple:
 
     $ echo "File Number One" > /tmp/1.txt
     $ echo "File Number Two" > /tmp/2.txt
-    $ cat $(vcat /tmp/*.txt)
+    $ cat $(cfconcat /tmp/*.txt)
     File Number One
     File Number Two
 
-The man pages for `concat-fuse` and `vcat` provide further information
+The man pages for `concat-fuse` and `cfconcat` provide further information
 and examples.

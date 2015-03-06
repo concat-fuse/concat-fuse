@@ -113,7 +113,7 @@ def main():
                                      epilog="The name of the virtual file is returned on stdout.")
 
     # argparser does not allow freely mixing optional and positional
-    # arguments, this limits the functionality of `vcat` somewhat, but
+    # arguments, this limits the functionality of `cfconcat` somewhat, but
     # shouldn't be to critical: http://bugs.python.org/issue14191
 
     concat_fuse_group = parser.add_argument_group("concat-fuse options")

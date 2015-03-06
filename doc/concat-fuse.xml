@@ -41,7 +41,7 @@
       allows accessing groups of files as if they were a single large
       file. In most cases direct interaction with
       <command>concat-fuse</command> isn't needed, as the convinience
-      tool <command>vcat</command> hides the plumbing away.
+      tool <command>cfconcat</command> hides the plumbing away.
     </para>
   </refsect1>
 
@@ -72,7 +72,7 @@
     <title>See also</title>
     <para>
       <citerefentry>
-        <refentrytitle>vcat</refentrytitle>
+        <refentrytitle>cfconcat</refentrytitle>
         <manvolnum>1</manvolnum>
         </citerefentry>,
         <citerefentry>

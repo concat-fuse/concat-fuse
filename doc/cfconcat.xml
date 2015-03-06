@@ -4,21 +4,21 @@
 <!ENTITY % concatstuff SYSTEM "concat.ent">
 %concatstuff;
 ]>
-<refentry id="vcat">
+<refentry id="cfconcat">
   <refmeta>
     <refentrytitle>
-      <application>vcat</application>
+      <application>cfconcat</application>
     </refentrytitle>
     <manvolnum>1</manvolnum>
     <refmiscinfo class="version">&concat_version;</refmiscinfo>
     <refmiscinfo class="author">&concat_version;</refmiscinfo>
     <refmiscinfo class="manual">User Commands</refmiscinfo>
-    <refmiscinfo class="source">vcat</refmiscinfo>
+    <refmiscinfo class="source">cfconcat</refmiscinfo>
   </refmeta>
 
   <refnamediv>
     <refname>
-      <application>vcat</application>
+      <application>cfconcat</application>
     </refname>
     <refpurpose>
       Access groups of files as if they were a single large file
@@ -27,7 +27,7 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>vcat</command>
+      <command>cfconcat</command>
       <arg choice="opt" rep="repeat">OPTION</arg>
       <arg choice="opt">-h</arg>
       <arg choice="opt">GLOB</arg>
@@ -37,7 +37,7 @@
   <refsect1>
     <title>Description</title>
     <para>
-      <command>vcat</command> is a wrapper around
+      <command>cfconcat</command> is a wrapper around
       <command>concat-fuse</command> that allows accessing groups of
       files, selected by a glob pattern, as if they were a single
       large file. It works by mounting the virtual filesystem
@@ -46,7 +46,7 @@
       concatenated.
     </para>
     <para>
-      <command>vcat</command> is especially useful for doing gapless
+      <command>cfconcat</command> is especially useful for doing gapless
       playback of video files (when the video format allows it) or for
       accessing archive files that have been `split` into multiple
       parts and where a temporary file would be to slow, large and
@@ -148,20 +148,20 @@
   <refsect1>
     <title>Example</title>
     <para>
-      A simple example of <command>vcat</command> use would look like this:
+      A simple example of <command>cfconcat</command> use would look like this:
     </para>
     <programlisting><![CDATA[$ echo "File Number One" > /tmp/1.txt
 $ echo "File Number Two" > /tmp/2.txt
-$ cat $(vcat /tmp/*.txt)
+$ cat $(cfconcat /tmp/*.txt)
 File Number One
 File Number Two]]></programlisting>
 
     <para>
-      The glob pattern can also provided to <command>vcat</command>
+      The glob pattern can also provided to <command>cfconcat</command>
       directly instead of being expanded by the Shell, this allows
       circumventing:
     </para>
-    <screen>bash: /home/ingo/bin/vcat: Argument list too long</screen>
+    <screen>bash: /home/ingo/bin/cfconcat: Argument list too long</screen>
     <para>
       Furthermore <command>touch</command>'ing the virtual file or
       resubmitting the glob pattern will update the virtual file in
@@ -171,7 +171,7 @@ File Number Two]]></programlisting>
     </para>
     <programlisting><![CDATA[$ echo "File Number One" > /tmp/1.txt
 $ echo "File Number Two" > /tmp/2.txt
-$ cat $(vcat --glob "/tmp/*.txt")
+$ cat $(cfconcat --glob "/tmp/*.txt")
 File Number One
 File Number Two]]></programlisting>
 
@@ -179,7 +179,7 @@ File Number Two]]></programlisting>
       Once done with the virtual file the virtual filesystem can be
       unmounted with:
     </para>
-    <programlisting><![CDATA[$ vcat -u]]></programlisting>
+    <programlisting><![CDATA[$ cfconcat -u]]></programlisting>
   </refsect1>
 
   <refsect1>
@@ -189,7 +189,7 @@ File Number Two]]></programlisting>
         <term><filename>$XDG_RUNTIME_DIR/concats-fuse/</filename></term>
         <term><filename>$HOME/.concat-fuse/</filename></term>
         <listitem>
-          <para>Default mount location that <command>vcat</command> uses
+          <para>Default mount location that <command>cfconcat</command> uses
           for <command>concat-fuse</command></para>
         </listitem>
       </varlistentry>
