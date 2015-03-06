@@ -116,6 +116,8 @@ def main():
     # arguments, this limits the functionality of `cfconcat` somewhat, but
     # shouldn't be to critical: http://bugs.python.org/issue14191
 
+    parser.add_argument('-v', '--version', action='store_true', help="Print version number")
+
     concat_fuse_group = parser.add_argument_group("concat-fuse options")
     concat_fuse_group.add_argument('-u', '--unmount', action='store_true', help="Unmount concat-fuse")
     concat_fuse_group.add_argument('-e', '--exe', metavar="EXE", type=str, help="Use EXE instead of concat-fuse")
@@ -139,7 +141,9 @@ def main():
 
     args = parser.parse_args()
 
-    if args.unmount:
+    if args.version:
+        print("cfconcat 0.2.1")
+    elif args.unmount:
         ConcatFuse.unmount(args.mountpoint)
     else:
         # generate the file list
