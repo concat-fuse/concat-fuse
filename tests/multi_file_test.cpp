@@ -35,8 +35,8 @@ TEST(MultiFileTest, test)
 
   struct fuse_file_info fi;
   memset(&fi, 0, sizeof(fi));
-  std::array<char, 18> buf;
-  std::array<char, 18> expected_result{"Foobar\ndeadbeef\n"};
+  std::array<char, 16> buf;
+  std::array<char, 16> expected_result{'F', 'o', 'o', 'b', 'a', 'r', '\n', 'd', 'e', 'a', 'd', 'b', 'e', 'e', 'f', '\n'};
   int ret = multi_file->read("dummy_path", buf.data(), buf.size(), 0, &fi);
 
   // size of the test1.dat and test2.dat combined
