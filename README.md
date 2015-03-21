@@ -32,26 +32,25 @@ On Ubuntu 15.04 they can be installed with:
 Compilation
 -----------
 
-Compiling is done with `waf`:
+Compiling is done with `cmake`:
 
-    ./waf configure
-    ./waf
+    cmake .
+    make
 
 To switch on test case building and extra warning flags use:
 
-    ./waf configure --developer --build-tests
+    cmake .. -DBUILD_TESTS=1 -DDEVELOPER=1
 
 
 Installation
 ------------
 
-    ./waf install
+    make install
 
-The install location can be configured with the `PREFIX` and
-`DESTDIR`:
+The install location can be configured with `PREFIX` and `DESTDIR`:
 
-    ./waf configure --prefix=PREFIX
-    ./waf install --destdir=DESTDIR
+    cmake .. -DCMAKE_INSTALL_PREFIX:PATH=/your/prefix/here
+    make install DESTDIR="/some/absolute/path"
 
 
 Usage
