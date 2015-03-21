@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 cmake_minimum_required(VERSION 3.0)
 project(concat-fuse)
 
@@ -70,15 +69,15 @@ target_link_libraries(concat-fuse libconcat-fuse ${FUSE_LIBRARIES} ${MHASH_LIBRA
 target_compile_options(concat-fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNING_CXX_FLAGS})
 
 if(BUILD_TESTS)
-  add_library(gtest STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/gtest-1.7.0/src/gtest-all.cc)
+  add_library(gtest STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/src/gtest-all.cc)
   target_include_directories(gtest SYSTEM PRIVATE
-    external/gtest-1.7.0/include/
-    external/gtest-1.7.0/)
+    external/googletest/include/
+    external/googletest/)
 
-  add_library(gtest_main STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/gtest-1.7.0/src/gtest_main.cc)
+  add_library(gtest_main STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/src/gtest_main.cc)
   target_include_directories(gtest_main SYSTEM PRIVATE
-    external/gtest-1.7.0/include/
-    external/gtest-1.7.0/)
+    external/googletest/include/
+    external/googletest/)
 
   file(GLOB TEST_CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     tests/*_test.cpp)

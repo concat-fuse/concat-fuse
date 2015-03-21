@@ -1,0 +1,3 @@
+[submodule "external/googletest"]
+	path = external/googletest
+	url = http://git.chromium.org/external/googletest.git
