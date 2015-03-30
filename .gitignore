@@ -1,9 +1,4 @@
-*.o
-*.so
 *~
-/.lock-waf_linux2_build
-/.waf-1.8.6-815b991931c187cd7c4e2bcfeb5f4a5d/
 /build*/
-/concat_fuse
 /old/
 /doc/*.ent

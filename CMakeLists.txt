@@ -17,14 +17,14 @@
 cmake_minimum_required(VERSION 3.0)
 project(concat-fuse)
 
-include(FindPkgConfig)
-
-find_package(Threads)
-pkg_search_module(FUSE REQUIRED fuse)
-pkg_search_module(MHASH REQUIRED mhash)
+find_package(Threads REQUIRED)
 find_library(RT rt)
 
-list(APPEND CMAKE_CXX_FLAGS -std=c++11)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(FUSE REQUIRED fuse)
+pkg_search_module(MHASH REQUIRED mhash)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if(DEVELOPER)
   set(WARNING_CXX_FLAGS
@@ -99,6 +99,6 @@ install(FILES
 install(FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/doc/cfconcat.1
   ${CMAKE_CURRENT_SOURCE_DIR}/doc/concat-fuse.1
-  DESTINATION "share/man/1/")
+  DESTINATION "share/man/man1/")
 
 # EOF #
