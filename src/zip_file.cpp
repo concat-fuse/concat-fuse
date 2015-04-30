@@ -16,6 +16,7 @@
 
 #include "zip_file.hpp"
 
+#include <algorithm>
 #include <sys/stat.h>
 
 #include "util.hpp"
@@ -55,6 +56,12 @@ ZipFile::ZipFile(const std::string& filename) :
     m_size += file_info.uncompressed_size;
   }
   while(unzGoToNextFile(m_fp) == UNZ_OK);
+
+  // entries in the .zip might not be ordered, so sort them
+  std::sort(m_entries.begin(), m_entries.end(),
+            [](ZipEntry const& lhs, ZipEntry const& rhs){
+              return lhs.filename < rhs.filename;
+            });
 
   log_debug("{}: size={} entries={}", m_filename, m_size, m_entries.size());
 }
