@@ -165,6 +165,10 @@ init_concat_fuse_root()
   from_glob_dir->add_file("control", make_unique<ControlFile>(*from_glob_dir, ControlFile::GLOB_MODE));
   root->add_directory("from-glob0", std::move(from_glob_dir));
 
+  auto from_zip_dir = make_unique<SimpleDirectory>();
+  from_zip_dir->add_file("control", make_unique<ControlFile>(*from_zip_dir, ControlFile::ZIP_MODE));
+  root->add_directory("from-zip", std::move(from_zip_dir));
+
   return root;
 }
 

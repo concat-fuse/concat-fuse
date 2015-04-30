@@ -26,7 +26,7 @@ class SimpleDirectory;
 class ControlFile : public File
 {
 public:
-  enum  Mode { GLOB_MODE, LIST_MODE };
+  enum  Mode { GLOB_MODE, LIST_MODE, ZIP_MODE };
 
 private:
   SimpleDirectory& m_directory;
