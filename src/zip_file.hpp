@@ -19,6 +19,10 @@
 
 #include "file.hpp"
 
+#include <vector>
+#include <string>
+#include <unzip.h>
+
 class ZipFile : public File
 {
 private:
@@ -27,6 +31,17 @@ private:
   struct timespec m_mtime;
 
   std::string m_filename;
+
+  unzFile m_fp;
+
+  struct ZipEntry
+  {
+    unz_file_pos pos;
+    size_t uncompressed_size;
+    std::string filename;
+  };
+
+  std::vector<ZipEntry> m_entries;
 
 public:
   ZipFile(const std::string& filename);
@@ -44,6 +59,9 @@ public:
 
   int read(const char* path, char* buf, size_t len, off_t offset,
            struct fuse_file_info* fi) override;
+
+private:
+  ssize_t find_file(size_t& offset);
 
 private:
   ZipFile(const ZipFile&) = delete;

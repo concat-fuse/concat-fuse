@@ -18,21 +18,135 @@
 
 #include <sys/stat.h>
 
+#include "util.hpp"
+
 ZipFile::ZipFile(const std::string& filename) :
   m_pos(0),
   m_size(0),
   m_mtime(),
-  m_filename(filename)
+  m_filename(filename),
+  m_fp(),
+  m_entries()
 {
+  m_fp = unzOpen(m_filename.c_str());
+  if (!m_fp)
+  {
+    throw std::runtime_error("failed to open " + m_filename);
+  }
+
+  // read .zip index
+  unzGoToFirstFile(m_fp);
+  do
+  {
+    unz_file_pos pos;
+    unzGetFilePos(m_fp, &pos);
+
+    unz_file_info file_info;
+    char filename_c[4096];
+    unzGetCurrentFileInfo(
+      m_fp,
+      &file_info,
+      filename_c, sizeof(filename_c),
+      nullptr, 0, // extrafield
+      nullptr, 0 // comment
+      );
+
+    m_entries.push_back(ZipEntry{ pos, file_info.uncompressed_size, filename_c});
+    m_size += file_info.uncompressed_size;
+  }
+  while(unzGoToNextFile(m_fp) == UNZ_OK);
+
+  log_debug("{}: size={} entries={}", m_filename, m_size, m_entries.size());
 }
 
 ZipFile::~ZipFile()
 {
+  unzClose(m_fp);
 }
 
 ssize_t
 ZipFile::read(size_t pos, char* buf, size_t count)
 {
+  // clip read request to available data
+  if (pos + count > m_size)
+  {
+    count = m_size - pos;
+  }
+
+  size_t total_count = 0;
+  while(count != 0)
+  {
+    size_t rel_offset = pos + total_count;
+    ssize_t idx = find_file(rel_offset);
+    if (idx < 0)
+    {
+      log_debug("zip entry not found: size={} pos={} count={}", m_size, pos, count);
+      return -1;
+    }
+
+    unzGoToFilePos(m_fp, &m_entries[idx].pos);
+    size_t data_left = m_entries[idx].uncompressed_size - rel_offset;
+
+    unzOpenCurrentFile(m_fp);
+
+    // "seek" to the offset via read() calls
+    char tmpbuf[1024 * 16];
+    while(rel_offset != 0)
+    {
+      if (rel_offset > sizeof(tmpbuf))
+      {
+        rel_offset -= unzReadCurrentFile(m_fp, tmpbuf, sizeof(tmpbuf));
+      }
+      else
+      {
+        rel_offset -= unzReadCurrentFile(m_fp, tmpbuf, static_cast<unsigned int>(rel_offset));
+      }
+    }
+
+    // read the data
+    ssize_t read_amount = std::min(data_left, count);
+    ssize_t len = unzReadCurrentFile(m_fp, buf, static_cast<unsigned int>(read_amount));
+    if (len == 0)
+    {
+      log_debug("{}: unexpected eof", m_filename);
+      return -1;
+    }
+    else if (len < 0)
+    {
+      log_debug("{}: uncompression error", m_filename);
+      return -1;
+    }
+    else if (len != read_amount)
+    {
+      log_debug("{}: unexpected short read", m_filename);
+      return -1;
+    }
+    else
+    {
+      total_count += len;
+      count -= len;
+      buf += len;
+    }
+  }
+
+  return total_count;
+}
+
+ssize_t
+ZipFile::find_file(size_t& offset)
+{
+  for(size_t i = 0; i < m_entries.size(); ++i)
+  {
+    if (offset < m_entries[i].uncompressed_size)
+    {
+      return i;
+    }
+    else
+    {
+      offset -= m_entries[i].uncompressed_size;
+    }
+  }
+  return -1;
 }
 
 size_t
