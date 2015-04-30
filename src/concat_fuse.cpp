@@ -31,98 +31,187 @@
 
 int concat_getattr(const char* path, struct stat* stbuf)
 {
-  // filter noise out, as gettattr("/") is called each second for some
-  // reason.
-  if (strcmp(path, "/") != 0)
+  try
   {
-    log_debug("getattr(\"{}\", {})", path, stbuf);
-  }
+    // filter noise out, as gettattr("/") is called each second for some
+    // reason.
+    if (strcmp(path, "/") != 0)
+    {
+      log_debug("getattr(\"{}\", {})", path, stbuf);
+    }
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->getattr(path, stbuf);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->getattr(path, stbuf);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_utimens(const char* path, const struct timespec tv[2])
 {
-  log_debug("utimens(\"{}\", ...)", path);
+  try
+  {
+    log_debug("utimens(\"{}\", ...)", path);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->utimens(path, tv);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->utimens(path, tv);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_open(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("open({}, {})", path, fi);
+  try
+  {
+    log_debug("open({}, {})", path, fi);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->open(path, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->open(path, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_release(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("release({}) -> {}", path, fi->fh);
+  try
+  {
+    log_debug("release({}) -> {}", path, fi->fh);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->release(path, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->release(path, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info* fi)
 {
-  log_debug("read({}, {}, {}, {}, {})", path, static_cast<void*>(buf), len, offset, fi);
+  try
+  {
+    log_debug("read({}, {}, {}, {}, {})", path, static_cast<void*>(buf), len, offset, fi);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->read(path, buf, len, offset, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->read(path, buf, len, offset, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_write(const char* path, const char* buf, size_t len, off_t offset,
                  struct fuse_file_info* fi)
 {
-  log_debug("write({}) -> {}", path, fi->fh);
+  try
+  {
+    log_debug("write({}) -> {}", path, fi->fh);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->write(path, buf, len, offset, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->write(path, buf, len, offset, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_flush(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("flush({})", path);
+  try
+  {
+    log_debug("flush({})", path);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->flush(path, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->flush(path, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_opendir(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("opendir({})", path);
+  try
+  {
+    log_debug("opendir({})", path);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->opendir(path, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->opendir(path, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset,
                    struct fuse_file_info* fi)
 {
-  log_debug("readdir({})", path);
+  try
+  {
+    log_debug("readdir({})", path);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->readdir(path, buf, filler, offset, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->readdir(path, buf, filler, offset, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 int concat_releasedir(const char* path, struct fuse_file_info* fi)
 {
-  log_debug("releasedir({}, {})", path, fi->fh);
+  try
+  {
+    log_debug("releasedir({}, {})", path, fi->fh);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->releasedir(path, fi);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->releasedir(path, fi);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
+
 }
 
 int concat_truncate(const char* path, off_t offset)
 {
-  log_debug("truncate({}, {})", path, offset);
+  try
+  {
+    log_debug("truncate({}, {})", path, offset);
 
-  ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
-  return vfs->truncate(path, offset);
+    ConcatVFS* vfs = static_cast<ConcatVFS*>(fuse_get_context()->private_data);
+    return vfs->truncate(path, offset);
+  }
+  catch(std::exception const& err)
+  {
+    log_error("exception: {}", err.what());
+    return -ENOSYS;
+  }
 }
 
 fuse_operations
@@ -164,6 +253,10 @@ init_concat_fuse_root()
   auto from_glob_dir = make_unique<SimpleDirectory>();
   from_glob_dir->add_file("control", make_unique<ControlFile>(*from_glob_dir, ControlFile::GLOB_MODE));
   root->add_directory("from-glob0", std::move(from_glob_dir));
+
+  auto from_zip_dir = make_unique<SimpleDirectory>();
+  from_zip_dir->add_file("control", make_unique<ControlFile>(*from_zip_dir, ControlFile::ZIP_MODE));
+  root->add_directory("from-zip", std::move(from_zip_dir));
 
   return root;
 }

@@ -25,6 +25,7 @@
 #include "simple_directory.hpp"
 #include "simple_file_list.hpp"
 #include "util.hpp"
+#include "zip_file.hpp"
 
 namespace {
 
@@ -97,7 +98,10 @@ ControlFile::release(const char* path, struct fuse_file_info* fi)
   auto it = m_directory.get_files().find(sha1);
   if (it != m_directory.get_files().end())
   {
-    dynamic_cast<MultiFile&>(*it->second).refresh();
+    if (MultiFile* multi_file = dynamic_cast<MultiFile*>(it->second.get()))
+    {
+      multi_file->refresh();
+    }
     return 0;
   }
   else
@@ -112,6 +116,10 @@ ControlFile::release(const char* path, struct fuse_file_info* fi)
       case LIST_MODE:
         m_directory.add_file(sha1,
                              make_unique<MultiFile>(make_unique<SimpleFileList>(split(data, '\0'))));
+        return 0;
+
+      case ZIP_MODE:
+        m_directory.add_file(sha1, make_unique<ZipFile>(data));
         return 0;
 
       default:

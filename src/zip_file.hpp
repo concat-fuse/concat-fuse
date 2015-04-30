@@ -14,40 +14,58 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_CONTROL_FILE_HPP
-#define HEADER_CONTROL_FILE_HPP
-
-#include <vector>
+#ifndef HEADER_ZIP_FILE_HPP
+#define HEADER_ZIP_FILE_HPP
 
 #include "file.hpp"
 
-class SimpleDirectory;
+#include <vector>
+#include <string>
+#include <unzip.h>
 
-class ControlFile : public File
+class ZipFile : public File
 {
-public:
-  enum  Mode { GLOB_MODE, LIST_MODE, ZIP_MODE };
-
 private:
-  SimpleDirectory& m_directory;
-  Mode m_mode;
-  std::vector<std::string> m_tmpbuf;
+  size_t m_pos;
+  size_t m_size;
+  struct timespec m_mtime;
+
+  std::string m_filename;
+
+  unzFile m_fp;
+
+  struct ZipEntry
+  {
+    unz_file_pos pos;
+    size_t uncompressed_size;
+    std::string filename;
+  };
+
+  std::vector<ZipEntry> m_entries;
 
 public:
-  ControlFile(SimpleDirectory& directory, Mode mode);
-  ~ControlFile();
+  ZipFile(const std::string& filename);
+  ~ZipFile();
+
+  ssize_t read(size_t pos, char* buf, size_t count);
+  size_t get_size() const;
+  struct timespec get_mtime() const;
 
   int getattr(const char* path, struct stat* stbuf) override;
+  int utimens(const char* path, const struct timespec tv[2]) override;
 
   int open(const char* path, struct fuse_file_info* fi) override;
-  int write(const char* path, const char* buf, size_t len, off_t offset,
-                    struct fuse_file_info* fi) override;
-  int truncate(const char* path, off_t offsite) override;
   int release(const char* path, struct fuse_file_info* fi) override;
 
+  int read(const char* path, char* buf, size_t len, off_t offset,
+           struct fuse_file_info* fi) override;
+
 private:
-  ControlFile(const ControlFile&) = delete;
-  ControlFile& operator=(const ControlFile&) = delete;
+  ssize_t find_file(size_t& offset);
+
+private:
+  ZipFile(const ZipFile&) = delete;
+  ZipFile& operator=(const ZipFile&) = delete;
 };
 
 #endif
