@@ -43,7 +43,7 @@ SimpleFile::read(const char* path, char* buf, size_t len, off_t offset,
 {
   if (static_cast<size_t>(offset) < m_data.size())
   {
-    len = std::max(m_data.size() - static_cast<size_t>(offset), len);
+    len = std::min(m_data.size() - static_cast<size_t>(offset), len);
     memcpy(buf, m_data.data() + offset, len);
     return static_cast<int>(len);
   }
