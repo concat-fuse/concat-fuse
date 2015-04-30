@@ -25,8 +25,10 @@
 
 #ifdef NDEBUG
 #  define log_debug(...)
+#  define log_error(...)
 #else
 #  define log_debug(...) do{ format(std::cerr, "[DEBUG] " __FILE__ ": " __VA_ARGS__); std::endl(std::cerr); } while(0)
+#  define log_error(...) do{ format(std::cerr, "[DEBUG] " __FILE__ ": " __VA_ARGS__); std::endl(std::cerr); } while(0)
 #endif
 
 bool is_hex(char c);
