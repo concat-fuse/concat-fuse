@@ -224,9 +224,14 @@ def main():
                 virtual_filename = concat_fuse.glob(globs)
                 print(virtual_filename)
         elif args.zip:
-            concat_fuse = ConcatFuse(args.mountpoint, args.exe)
-            virtual_filename = concat_fuse.zip(os.path.abspath(args.zip))
-            print(virtual_filename)
+            zip_filename = os.path.abspath(args.zip)
+            if not os.path.exists(zip_filename):
+                print("%s: No such file or directory" % zip_filename, file=sys.stderr)
+                sys.exit(1)
+            else:
+                concat_fuse = ConcatFuse(args.mountpoint, args.exe)
+                virtual_filename = concat_fuse.zip(zip_filename)
+                print(virtual_filename)
         else:
             print("%s: fatal error: no input files provided" % sys.argv[0], file=sys.stderr)
             sys.exit(1)
