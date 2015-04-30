@@ -100,6 +100,18 @@ class ConcatFuse:
         virtual_file = os.path.join(self.basedir, "from-glob0", multifile_id)
         return virtual_file
 
+    def zip(self, zip):
+        """Send the zip to concat-fuse and return the filename of the virtual file"""
+
+        # write the zip filename list to concat-fuse
+        with open(os.path.join(self.basedir, "from-zip/control"), "wb") as fout:
+            fout.write(zip)
+
+        # return the virtual file name
+        multifile_id = hashlib.sha1(zip).hexdigest()
+        virtual_file = os.path.join(self.basedir, "from-zip", multifile_id)
+        return virtual_file
+
 
 def splitlines0(data):
     lst = data.split("\0")
@@ -136,8 +148,12 @@ def main():
     glob_group = parser.add_argument_group("glob options",
                                             ("Glob pattern act as dynamic file lists and the underlying virtual "
                                             "file can be dynamically updated when new files arrive."))
+    glob_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[], help="Use glob pattern to select files")
 
-    glob_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[], help="Use glob")
+    zip_group = parser.add_argument_group("zip options",
+                                            ("Read files from a .zip archive"))
+    zip_group.add_argument('-z', '--zip', metavar='ARCHIVE', action='store', help="Read files from ARCHIVE")
+
 
     args = parser.parse_args()
 
@@ -171,8 +187,15 @@ def main():
         globs.extend(args.glob)
         globs = [os.path.abspath(g) for g in globs]
 
-        if globs and files:
+        # check if arguments are valid
+        if globs and files :
             print("Can't mix globs and regular files", file=sys.stderr)
+            sys.exit(1)
+        elif globs and args.zip:
+            print("Can't mix globs and zip files", file=sys.stderr)
+            sys.exit(1)
+        elif files and args.zip:
+            print("Can't mix files and zip files", file=sys.stderr)
             sys.exit(1)
 
         errors = False
@@ -200,6 +223,10 @@ def main():
                 concat_fuse = ConcatFuse(args.mountpoint, args.exe)
                 virtual_filename = concat_fuse.glob(globs)
                 print(virtual_filename)
+        elif args.zip:
+            concat_fuse = ConcatFuse(args.mountpoint, args.exe)
+            virtual_filename = concat_fuse.zip(args.zip)
+            print(virtual_filename)
         else:
             print("%s: fatal error: no input files provided" % sys.argv[0], file=sys.stderr)
             sys.exit(1)
