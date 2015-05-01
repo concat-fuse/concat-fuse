@@ -29,6 +29,10 @@ ZipFile::ZipFile(const std::string& filename) :
   m_fp(),
   m_entries()
 {
+  // FIXME:
+  // * options to filter zip file content and customize sorting should
+  //   be provided to the user
+
   m_fp = unzOpen(m_filename.c_str());
   if (!m_fp)
   {
@@ -74,6 +78,13 @@ ZipFile::~ZipFile()
 ssize_t
 ZipFile::read(size_t pos, char* buf, size_t count)
 {
+  // FIXME:
+  // * seeking should check the current position with unztell() and
+  //   the current file and avoid redundant seeking
+  // * unzCloseCurrentFile() is never called
+  // * error checking
+  // * 64bit functions should be used instead of 32bit ones
+
   // clip read request to available data
   if (pos + count > m_size)
   {
