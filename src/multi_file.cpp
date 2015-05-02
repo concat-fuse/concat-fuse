@@ -16,123 +16,34 @@
 
 #include "multi_file.hpp"
 
-#include <ctype.h>
-#include <dlfcn.h>
-#include <fcntl.h>
-#include <glob.h>
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <fuse.h>
 
+#include "multi_file_stream.hpp"
 #include "util.hpp"
 
 MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
-  m_pos(0),
+  m_size(),
   m_mtime(),
   m_file_list(std::move(file_list)),
-  m_files()
+  m_handles()
 {
-  refresh();
+  // FIXME: insert code to calculate size
 }
 
-void
-MultiFile::refresh()
+MultiFile::~MultiFile()
 {
-  log_debug("MultiFile::refresh()");
-  m_files = m_file_list->scan();
-  clock_gettime(CLOCK_REALTIME, &m_mtime);
 }
 
 size_t
 MultiFile::get_size() const
 {
-  size_t total = 0;
-  for(const auto& file : m_files)
-  {
-    total += file.size;
-  }
-  return total;
+  return m_size;
 }
 
 struct timespec
 MultiFile::get_mtime() const
 {
   return m_mtime;
-}
-
-int
-MultiFile::find_file(size_t* offset)
-{
-  for(size_t i = 0; i < m_files.size(); ++i)
-  {
-    if (*offset >= m_files[i].size)
-    {
-      *offset -= m_files[i].size;
-    }
-    else
-    {
-      return static_cast<int>(i);
-    }
-  }
-  return -1;
-}
-
-ssize_t
-MultiFile::read(size_t pos, char* buf, size_t count)
-{
-  log_debug("magicfile_read({}, {}, {})", pos, static_cast<void*>(buf), count);
-
-  size_t total_count = 0;
-  while(count != 0)
-  {
-    size_t offset = pos;
-    int idx = find_file(&offset);
-    log_debug("found file: {} {} {} {}", pos, idx, offset, count);
-    if (idx < 0)
-    {
-      log_debug("EOF reached: {}", total_count);
-      return total_count;
-    }
-    else
-    {
-      size_t read_count = count;
-      if (m_files[idx].size - offset < count)
-      {
-        read_count = m_files[idx].size - offset;
-      }
-      read_subfile(m_files[idx].filename, offset, buf, read_count);
-      pos += read_count;
-      buf += read_count;
-      count -= read_count;
-      total_count += read_count;
-    }
-  }
-  log_debug("count = {}", count);
-  return total_count;
-}
-
-void
-MultiFile::read_subfile(const std::string& filename, size_t offset, char* buf, size_t count)
-{
-  // FIXME: insert error handling here
-  int fd = ::open(filename.c_str(), O_RDONLY);
-  if (fd < 0)
-  {
-    perror(filename.c_str());
-  }
-  else
-  {
-    ::lseek(fd, offset, SEEK_SET);
-    if (::read(fd, buf, count) < 0)
-    {
-      return; // FIXME: error
-    }
-    ::close(fd);
-  }
 }
 
 int
@@ -145,6 +56,16 @@ MultiFile::getattr(const char* path, struct stat* stbuf)
   return 0;
 }
 
+void
+MultiFile::refresh()
+{
+  for(const auto& h : m_handles)
+  {
+    h.second->refresh();
+  }
+  clock_gettime(CLOCK_REALTIME, &m_mtime);
+}
+
 int
 MultiFile::utimens(const char* path, const struct timespec tv[2])
 {
@@ -155,12 +76,14 @@ MultiFile::utimens(const char* path, const struct timespec tv[2])
 int
 MultiFile::open(const char* path, struct fuse_file_info* fi)
 {
+  fi->fh = m_handles.store(make_unique<MultiFileStream>(*m_file_list));
   return 0;
 }
 
 int
 MultiFile::release(const char* path, struct fuse_file_info* fi)
 {
+  m_handles.drop(fi->fh);
   return 0;
 }
 
@@ -168,7 +91,7 @@ int
 MultiFile::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info* fi)
 {
-  return static_cast<int>(MultiFile::read(static_cast<size_t>(offset), buf, len));
+  return static_cast<int>(m_handles.get(fi->fh)->read(static_cast<size_t>(offset), buf, len));
 }
 
 /* EOF */

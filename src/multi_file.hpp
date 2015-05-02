@@ -24,22 +24,26 @@
 
 #include "file_list.hpp"
 #include "file.hpp"
+#include "handle_store.hpp"
+
+class MultiFileStream;
 
 class MultiFile : public File
 {
 private:
-  size_t m_pos;
+  size_t m_size;
   struct timespec m_mtime;
 
   std::unique_ptr<FileList> m_file_list;
-  std::vector<FileInfo> m_files;
+  HandleStore<std::unique_ptr<MultiFileStream> > m_handles;
 
 public:
   MultiFile(std::unique_ptr<FileList> file_list);
+  ~MultiFile();
 
-  ssize_t read(size_t pos, char* buf, size_t count);
   size_t get_size() const;
   struct timespec get_mtime() const;
+
   void refresh();
 
   int getattr(const char* path, struct stat* stbuf) override;
@@ -50,11 +54,6 @@ public:
 
   int read(const char* path, char* buf, size_t len, off_t offset,
            struct fuse_file_info* fi) override;
-
-private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
 
 private:
   MultiFile(const MultiFile&) = delete;
