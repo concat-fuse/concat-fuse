@@ -19,8 +19,11 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "util.hpp"
+#include "simple_file_stream.hpp"
+
 SimpleFile::SimpleFile(const std::string& data) :
-  m_data(data)
+  m_stream(make_unique<SimpleFileStream>(data))
 {
 }
 
@@ -33,7 +36,7 @@ SimpleFile::getattr(const char* path, struct stat* stbuf)
 {
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
-  stbuf->st_size = m_data.size();
+  stbuf->st_size = m_stream->get_size();
   return 0;
 }
 
@@ -41,16 +44,7 @@ int
 SimpleFile::read(const char* path, char* buf, size_t len, off_t offset,
                  struct fuse_file_info* fi)
 {
-  if (static_cast<size_t>(offset) < m_data.size())
-  {
-    len = std::min(m_data.size() - static_cast<size_t>(offset), len);
-    memcpy(buf, m_data.data() + offset, len);
-    return static_cast<int>(len);
-  }
-  else
-  {
-    return 0;
-  }
+  return static_cast<int>(m_stream->read(offset, buf, len));
 }
 
 int

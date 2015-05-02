@@ -14,37 +14,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef HEADER_SIMPLE_FILE_HPP
-#define HEADER_SIMPLE_FILE_HPP
+#ifndef HEADER_SIMPLE_FILE_STREAM_HPP
+#define HEADER_SIMPLE_FILE_STREAM_HPP
 
 #include <string>
-#include <memory>
 
-#include "file.hpp"
+#include "stream.hpp"
 
-class SimpleFileStream;
-
-class SimpleFile : public File
+class SimpleFileStream : public Stream
 {
 private:
-  std::unique_ptr<SimpleFileStream> m_stream;
+  std::string m_data;
 
 public:
-  SimpleFile(const std::string& data);
-  virtual ~SimpleFile();
+  SimpleFileStream(const std::string& data);
 
-  int getattr(const char* path, struct stat* stbuf) override;
-
-  int open(const char* path, struct fuse_file_info* fi) override;
-  int release(const char* path, struct fuse_file_info* fi) override;
-
-  int read(const char* path, char* buf, size_t len, off_t offset,
-           struct fuse_file_info* fi) override;
-  int flush(const char* path, struct fuse_file_info* fi) override;
+  ssize_t read(size_t pos, char* buf, size_t count) override;
+  size_t get_size() const override;
 
 private:
-  SimpleFile(const SimpleFile&) = delete;
-  SimpleFile& operator=(const SimpleFile&) = delete;
+  SimpleFileStream(const SimpleFileStream&) = delete;
+  SimpleFileStream& operator=(const SimpleFileStream&) = delete;
 };
 
 #endif
