@@ -1,0 +1,67 @@
+// concat-fuse
+// Copyright (C) 2015 Ingo Ruhnke <grumbel@gmx.de>
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#ifndef HEADER_HANDLE_STORE_HPP
+#define HEADER_HANDLE_STORE_HPP
+
+#include <stdint.h>
+#include <unordered_map>
+
+template<typename T>
+class HandleStore
+{
+private:
+  std::unordered_map<uint64_t, T> m_items;
+  uint64_t m_id;
+
+public:
+  HandleStore() :
+    m_items(),
+    m_id(1)
+  {}
+
+  ~HandleStore()
+  {}
+
+  uint64_t store(T&& v)
+  {
+    m_items[m_id] = std::move(v);
+    return m_id++;
+  }
+
+  uint64_t store(T const& v)
+  {
+    m_items[m_id] = v;
+    return m_id++;
+  }
+
+  T& get(uint64_t id)
+  {
+    return m_items[id];
+  }
+
+  T drop(uint64_t id)
+  {
+    auto it = m_items.find(id);
+    T tmp(std::move(it->second));
+    m_items.erase(it);
+    return std::move(tmp);
+  }
+};
+
+#endif
+
+/* EOF */
