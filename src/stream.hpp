@@ -17,6 +17,8 @@
 #ifndef HEADER_STREAM_HPP
 #define HEADER_STREAM_HPP
 
+#include <stddef.h>
+
 class Stream
 {
 public:
