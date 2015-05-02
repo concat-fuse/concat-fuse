@@ -76,8 +76,15 @@ MultiFile::utimens(const char* path, const struct timespec tv[2])
 int
 MultiFile::open(const char* path, struct fuse_file_info* fi)
 {
-  fi->fh = m_handles.store(make_unique<MultiFileStream>(*m_file_list));
-  return 0;
+  if ((fi->flags & O_ACCMODE) == O_RDONLY)
+  {
+    fi->fh = m_handles.store(make_unique<MultiFileStream>(*m_file_list));
+    return 0;
+  }
+  else
+  {
+    return -EACCES;
+  }
 }
 
 int
