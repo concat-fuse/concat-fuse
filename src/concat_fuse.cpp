@@ -46,7 +46,7 @@ int concat_getattr(const char* path, struct stat* stbuf)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -62,7 +62,7 @@ int concat_utimens(const char* path, const struct timespec tv[2])
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -78,7 +78,7 @@ int concat_open(const char* path, struct fuse_file_info* fi)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -94,7 +94,7 @@ int concat_release(const char* path, struct fuse_file_info* fi)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -111,7 +111,7 @@ int concat_read(const char* path, char* buf, size_t len, off_t offset,
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -128,7 +128,7 @@ int concat_write(const char* path, const char* buf, size_t len, off_t offset,
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -144,7 +144,7 @@ int concat_flush(const char* path, struct fuse_file_info* fi)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -160,7 +160,7 @@ int concat_opendir(const char* path, struct fuse_file_info* fi)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -177,7 +177,7 @@ int concat_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t of
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
@@ -193,7 +193,7 @@ int concat_releasedir(const char* path, struct fuse_file_info* fi)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 
 }
@@ -210,7 +210,7 @@ int concat_truncate(const char* path, off_t offset)
   catch(std::exception const& err)
   {
     log_error("exception: {}", err.what());
-    return -ENOSYS;
+    return -EIO;
   }
 }
 
