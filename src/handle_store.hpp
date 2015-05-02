@@ -23,6 +23,10 @@
 template<typename T>
 class HandleStore
 {
+public:
+  typedef typename std::unordered_map<uint64_t, T>::iterator iterator;
+  typedef typename std::unordered_map<uint64_t, T>::const_iterator const_iterator;
+
 private:
   std::unordered_map<uint64_t, T> m_items;
   uint64_t m_id;
@@ -60,6 +64,11 @@ public:
     m_items.erase(it);
     return std::move(tmp);
   }
+
+  iterator begin() { return m_items.begin(); }
+  iterator end() { return m_items.end(); }
+  const_iterator begin() const { return m_items.begin(); }
+  const_iterator end() const { return m_items.end(); }
 };
 
 #endif
