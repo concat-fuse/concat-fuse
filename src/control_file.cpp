@@ -16,9 +16,9 @@
 
 #include "control_file.hpp"
 
+#include <fuse.h>
 #include <stdint.h>
 #include <sys/stat.h>
-#include <fuse.h>
 
 #include "glob_file_list.hpp"
 #include "multi_file.hpp"
@@ -26,20 +26,6 @@
 #include "simple_file_list.hpp"
 #include "util.hpp"
 #include "zip_file.hpp"
-
-namespace {
-
-uint64_t make_fh(size_t v)
-{
-  return static_cast<uint64_t>(v);
-}
-
-size_t fh2idx(uint64_t handle)
-{
-  return static_cast<size_t>(handle - UINT64_C(1));
-}
-
-} // namespace
 
 ControlFile::ControlFile(SimpleDirectory& directory, Mode mode) :
   m_directory(directory),
@@ -64,20 +50,26 @@ ControlFile::getattr(const char* path, struct stat* stbuf)
 int
 ControlFile::open(const char* path, struct fuse_file_info* fi)
 {
-  m_tmpbuf.push_back({});
-  fi->fh = make_fh(m_tmpbuf.size());
-  fi->direct_io = 1;
+  if ((fi->flags & O_ACCMODE) == O_WRONLY)
+  {
+    fi->fh = m_tmpbuf.store(std::string());
+    fi->direct_io = 1;
 
-  log_debug("ControlFile::open {}", fi->fh);
+    log_debug("ControlFile::open {}", fi->fh);
 
-  return 0;
+    return 0;
+  }
+  else
+  {
+    return -EACCES;
+  }
 }
 
 int
 ControlFile::write(const char* path, const char* buf, size_t len, off_t offset,
                    struct fuse_file_info* fi)
 {
-  m_tmpbuf[fh2idx(fi->fh)].append(buf, len);
+  m_tmpbuf.get(fi->fh).append(buf, len);
   return static_cast<int>(len);
 }
 
@@ -90,7 +82,7 @@ ControlFile::truncate(const char* path, off_t offsite)
 int
 ControlFile::release(const char* path, struct fuse_file_info* fi)
 {
-  const std::string& data = m_tmpbuf[fh2idx(fi->fh)];
+  std::string data = m_tmpbuf.drop(fi->fh);
   std::string sha1 = sha1sum(data);
 
   log_debug("RECEIVED: {}", sha1);

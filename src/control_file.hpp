@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "file.hpp"
+#include "handle_store.hpp"
 
 class SimpleDirectory;
 
@@ -31,7 +32,7 @@ public:
 private:
   SimpleDirectory& m_directory;
   Mode m_mode;
-  std::vector<std::string> m_tmpbuf;
+  HandleStore<std::string> m_tmpbuf;
 
 public:
   ControlFile(SimpleDirectory& directory, Mode mode);
