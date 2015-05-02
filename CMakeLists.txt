@@ -48,17 +48,7 @@ else(DEVELOPER)
 endif(DEVELOPER)
 
 file(GLOB CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-  src/concat_fuse.cpp
-  src/concat_vfs.cpp
-  src/control_file.cpp
-  src/directory.cpp
-  src/glob_file_list.cpp
-  src/multi_file.cpp
-  src/simple_directory.cpp
-  src/simple_file.cpp
-  src/simple_file_list.cpp
-  src/util.cpp
-  src/zip_file.cpp)
+  src/*.cpp)
 
 add_library(libconcat-fuse STATIC ${CONCAT_FUSE_SOURCES_CXX})
 set_target_properties(libconcat-fuse PROPERTIES OUTPUT_NAME concat-fuse)

@@ -19,35 +19,28 @@
 
 #include "file.hpp"
 
-#include <vector>
 #include <string>
-#include <unzip.h>
+#include <mutex>
+#include <memory>
+
+#include "handle_store.hpp"
+
+class ZipData;
 
 class ZipFile : public File
 {
 private:
-  size_t m_pos;
+  std::string m_filename;
   size_t m_size;
   struct timespec m_mtime;
 
-  std::string m_filename;
-
-  unzFile m_fp;
-
-  struct ZipEntry
-  {
-    unz_file_pos pos;
-    size_t uncompressed_size;
-    std::string filename;
-  };
-
-  std::vector<ZipEntry> m_entries;
+  HandleStore<std::unique_ptr<ZipData> > m_handles;
+  std::mutex m_mutex;
 
 public:
   ZipFile(const std::string& filename);
   ~ZipFile();
 
-  ssize_t read(size_t pos, char* buf, size_t count);
   size_t get_size() const;
   struct timespec get_mtime() const;
 
@@ -59,9 +52,6 @@ public:
 
   int read(const char* path, char* buf, size_t len, off_t offset,
            struct fuse_file_info* fi) override;
-
-private:
-  ssize_t find_file(size_t& offset);
 
 private:
   ZipFile(const ZipFile&) = delete;

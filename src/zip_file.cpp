@@ -16,155 +16,27 @@
 
 #include "zip_file.hpp"
 
-#include <algorithm>
-#include <sys/stat.h>
+#include <fuse.h>
 
 #include "util.hpp"
+#include "zip_data.hpp"
 
 ZipFile::ZipFile(const std::string& filename) :
-  m_pos(0),
-  m_size(0),
-  m_mtime(),
   m_filename(filename),
-  m_fp(),
-  m_entries()
+  m_size(),
+  m_mtime(),
+  m_handles(),
+  m_mutex()
 {
   // FIXME:
   // * options to filter zip file content and customize sorting should
   //   be provided to the user
-
-  m_fp = unzOpen(m_filename.c_str());
-  if (!m_fp)
-  {
-    throw std::runtime_error("failed to open " + m_filename);
-  }
-
-  // read .zip index
-  unzGoToFirstFile(m_fp);
-  do
-  {
-    unz_file_pos pos;
-    unzGetFilePos(m_fp, &pos);
-
-    unz_file_info file_info;
-    char filename_c[4096];
-    unzGetCurrentFileInfo(
-      m_fp,
-      &file_info,
-      filename_c, sizeof(filename_c),
-      nullptr, 0, // extrafield
-      nullptr, 0 // comment
-      );
-
-    m_entries.push_back(ZipEntry{ pos, file_info.uncompressed_size, filename_c});
-    m_size += file_info.uncompressed_size;
-  }
-  while(unzGoToNextFile(m_fp) == UNZ_OK);
-
-  // entries in the .zip might not be ordered, so sort them
-  std::sort(m_entries.begin(), m_entries.end(),
-            [](ZipEntry const& lhs, ZipEntry const& rhs){
-              return lhs.filename < rhs.filename;
-            });
-
-  log_debug("{}: size={} entries={}", m_filename, m_size, m_entries.size());
+  auto data = ZipData::open(m_filename);
+  m_size = data->get_size();
 }
 
 ZipFile::~ZipFile()
 {
-  unzClose(m_fp);
-}
-
-ssize_t
-ZipFile::read(size_t pos, char* buf, size_t count)
-{
-  // FIXME:
-  // * seeking should check the current position with unztell() and
-  //   the current file and avoid redundant seeking
-  // * unzCloseCurrentFile() is never called
-  // * error checking
-  // * 64bit functions should be used instead of 32bit ones
-
-  // clip read request to available data
-  if (pos + count > m_size)
-  {
-    count = m_size - pos;
-  }
-
-  size_t total_count = 0;
-  while(count != 0)
-  {
-    size_t rel_offset = pos + total_count;
-    ssize_t idx = find_file(rel_offset);
-    if (idx < 0)
-    {
-      log_debug("zip entry not found: size={} pos={} count={}", m_size, pos, count);
-      return -1;
-    }
-
-    unzGoToFilePos(m_fp, &m_entries[idx].pos);
-    size_t data_left = m_entries[idx].uncompressed_size - rel_offset;
-
-    unzOpenCurrentFile(m_fp);
-
-    // "seek" to the offset via read() calls
-    char tmpbuf[1024 * 16];
-    while(rel_offset != 0)
-    {
-      if (rel_offset > sizeof(tmpbuf))
-      {
-        rel_offset -= unzReadCurrentFile(m_fp, tmpbuf, sizeof(tmpbuf));
-      }
-      else
-      {
-        rel_offset -= unzReadCurrentFile(m_fp, tmpbuf, static_cast<unsigned int>(rel_offset));
-      }
-    }
-
-    // read the data
-    ssize_t read_amount = std::min(data_left, count);
-    ssize_t len = unzReadCurrentFile(m_fp, buf, static_cast<unsigned int>(read_amount));
-    if (len == 0)
-    {
-      log_debug("{}: unexpected eof", m_filename);
-      return -1;
-    }
-    else if (len < 0)
-    {
-      log_debug("{}: uncompression error", m_filename);
-      return -1;
-    }
-    else if (len != read_amount)
-    {
-      log_debug("{}: unexpected short read", m_filename);
-      return -1;
-    }
-    else
-    {
-      total_count += len;
-      count -= len;
-      buf += len;
-    }
-  }
-
-  return total_count;
-}
-
-ssize_t
-ZipFile::find_file(size_t& offset)
-{
-  for(size_t i = 0; i < m_entries.size(); ++i)
-  {
-    if (offset < m_entries[i].uncompressed_size)
-    {
-      return i;
-    }
-    else
-    {
-      offset -= m_entries[i].uncompressed_size;
-    }
-  }
-  return -1;
 }
 
 size_t
@@ -182,10 +54,12 @@ ZipFile::get_mtime() const
 int
 ZipFile::getattr(const char* path, struct stat* stbuf)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
-  stbuf->st_size = get_size();
-  stbuf->st_mtim = get_mtime();
+  stbuf->st_size = m_size;
+  stbuf->st_mtim = m_mtime;
   return 0;
 }
 
@@ -198,12 +72,21 @@ ZipFile::utimens(const char* path, const struct timespec tv[2])
 int
 ZipFile::open(const char* path, struct fuse_file_info* fi)
 {
-  return 0;
+  if ((fi->flags & O_ACCMODE) == O_RDONLY)
+  {
+    fi->fh = m_handles.store(ZipData::open(m_filename));
+    return 0;
+  }
+  else
+  {
+    return -EACCES;
+  }
 }
 
 int
 ZipFile::release(const char* path, struct fuse_file_info* fi)
 {
+  m_handles.drop(fi->fh);
   return 0;
 }
 
@@ -211,7 +94,7 @@ int
 ZipFile::read(const char* path, char* buf, size_t len, off_t offset,
               struct fuse_file_info* fi)
 {
-  return static_cast<int>(read(static_cast<size_t>(offset), buf, len));
+  return static_cast<int>(m_handles.get(fi->fh)->read(static_cast<size_t>(offset), buf, len));
 }
 
 /* EOF */
