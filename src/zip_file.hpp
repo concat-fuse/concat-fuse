@@ -25,7 +25,7 @@
 
 #include "handle_store.hpp"
 
-class ZipData;
+class ZipStream;
 
 class ZipFile : public File
 {
@@ -34,7 +34,7 @@ private:
   size_t m_size;
   struct timespec m_mtime;
 
-  HandleStore<std::unique_ptr<ZipData> > m_handles;
+  HandleStore<std::unique_ptr<ZipStream> > m_handles;
   std::mutex m_mutex;
 
 public:

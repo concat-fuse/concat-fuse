@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "zip_data.hpp"
+#include "zip_stream.hpp"
 
 #include <algorithm>
 
 #include "util.hpp"
 
-std::unique_ptr<ZipData>
-ZipData::open(const std::string& filename)
+std::unique_ptr<ZipStream>
+ZipStream::open(const std::string& filename)
 {
   unzFile fp = unzOpen(filename.c_str());
   if (!fp)
@@ -30,7 +30,7 @@ ZipData::open(const std::string& filename)
   }
   else
   {
-    auto result = std::unique_ptr<ZipData>(new ZipData(fp));
+    auto result = std::unique_ptr<ZipStream>(new ZipStream(fp));
 
     result->read_index();
 
@@ -41,7 +41,7 @@ ZipData::open(const std::string& filename)
   }
 }
 
-ZipData::ZipData(unzFile fp) :
+ZipStream::ZipStream(unzFile fp) :
   m_fp(fp),
   m_pos(),
   m_size(),
@@ -50,13 +50,13 @@ ZipData::ZipData(unzFile fp) :
 {
 }
 
-ZipData::~ZipData()
+ZipStream::~ZipStream()
 {
   unzClose(m_fp);
 }
 
 void
-ZipData::read_index()
+ZipStream::read_index()
 {
   // read .zip index
   unzGoToFirstFile(m_fp);
@@ -84,7 +84,7 @@ ZipData::read_index()
 }
 
 void
-ZipData::sort_index()
+ZipStream::sort_index()
 {
   std::sort(m_entries.begin(), m_entries.end(),
             [](ZipEntry const& lhs, ZipEntry const& rhs){
@@ -93,13 +93,13 @@ ZipData::sort_index()
 }
 
 size_t
-ZipData::get_size() const
+ZipStream::get_size() const
 {
   return m_size;
 }
 
 ssize_t
-ZipData::read(size_t pos, char* buf, size_t count)
+ZipStream::read(size_t pos, char* buf, size_t count)
 {
   // FIXME:
   // * seeking should check the current position with unztell() and
@@ -174,7 +174,7 @@ ZipData::read(size_t pos, char* buf, size_t count)
 }
 
 ssize_t
-ZipData::find_file(size_t& offset)
+ZipStream::find_file(size_t& offset)
 {
   for(size_t i = 0; i < m_entries.size(); ++i)
   {

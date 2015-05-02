@@ -19,7 +19,7 @@
 #include <fuse.h>
 
 #include "util.hpp"
-#include "zip_data.hpp"
+#include "zip_stream.hpp"
 
 ZipFile::ZipFile(const std::string& filename) :
   m_filename(filename),
@@ -31,7 +31,7 @@ ZipFile::ZipFile(const std::string& filename) :
   // FIXME:
   // * options to filter zip file content and customize sorting should
   //   be provided to the user
-  auto data = ZipData::open(m_filename);
+  auto data = ZipStream::open(m_filename);
   m_size = data->get_size();
 }
 
@@ -74,7 +74,7 @@ ZipFile::open(const char* path, struct fuse_file_info* fi)
 {
   if ((fi->flags & O_ACCMODE) == O_RDONLY)
   {
-    fi->fh = m_handles.store(ZipData::open(m_filename));
+    fi->fh = m_handles.store(ZipStream::open(m_filename));
     return 0;
   }
   else

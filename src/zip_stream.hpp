@@ -23,7 +23,9 @@
 
 #include <unzip.h>
 
-class ZipData
+#include "stream.hpp"
+
+class ZipStream : public Stream
 {
 private:
   struct ZipEntry
@@ -34,11 +36,11 @@ private:
   };
 
 private:
-  ZipData(unzFile fp);
+  ZipStream(unzFile fp);
 
 public:
-  static std::unique_ptr<ZipData> open(const std::string& filename);
-  ~ZipData();
+  static std::unique_ptr<ZipStream> open(const std::string& filename);
+  ~ZipStream();
 
   size_t get_size() const;
 
@@ -57,8 +59,8 @@ private:
   std::vector<ZipEntry> m_entries;
 
 private:
-  ZipData(const ZipData&) = delete;
-  ZipData& operator=(const ZipData&) = delete;
+  ZipStream(const ZipStream&) = delete;
+  ZipStream& operator=(const ZipStream&) = delete;
 };
 
 #endif
