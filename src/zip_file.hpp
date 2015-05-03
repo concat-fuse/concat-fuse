@@ -22,6 +22,7 @@
 #include <string>
 #include <mutex>
 #include <memory>
+#include <sys/stat.h>
 
 #include "handle_store.hpp"
 
@@ -32,7 +33,7 @@ class ZipFile : public File
 private:
   std::string m_filename;
   size_t m_size;
-  struct timespec m_mtime;
+  struct stat m_stbuf;
 
   HandleStore<std::unique_ptr<ZipStream> > m_handles;
   std::mutex m_mutex;
@@ -42,10 +43,8 @@ public:
   ~ZipFile();
 
   size_t get_size() const;
-  struct timespec get_mtime() const;
 
   int getattr(const char* path, struct stat* stbuf) override;
-  int utimens(const char* path, const struct timespec tv[2]) override;
 
   int open(const char* path, struct fuse_file_info* fi) override;
   int release(const char* path, struct fuse_file_info* fi) override;

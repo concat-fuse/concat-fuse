@@ -17,6 +17,8 @@
 #include "zip_file.hpp"
 
 #include <fuse.h>
+#include <string.h>
+#include <sstream>
 
 #include "util.hpp"
 #include "zip_stream.hpp"
@@ -24,15 +26,26 @@
 ZipFile::ZipFile(const std::string& filename) :
   m_filename(filename),
   m_size(),
-  m_mtime(),
+  m_stbuf(),
   m_handles(),
   m_mutex()
 {
   // FIXME:
   // * options to filter zip file content and customize sorting should
   //   be provided to the user
+
+  // have a peek inside the Zip to get the size
   auto data = ZipStream::open(m_filename);
   m_size = data->get_size();
+
+  // get the mtime of the file
+  int ret = stat(m_filename.c_str(), &m_stbuf);
+  if (ret < 0)
+  {
+    std::ostringstream str;
+    format(str, "{}: stat() failed: ", m_filename, strerror(errno));
+    throw std::runtime_error(str.str());
+  }
 }
 
 ZipFile::~ZipFile()
@@ -45,12 +58,6 @@ ZipFile::get_size() const
   return m_size;
 }
 
-struct timespec
-ZipFile::get_mtime() const
-{
-  return m_mtime;
-}
-
 int
 ZipFile::getattr(const char* path, struct stat* stbuf)
 {
@@ -59,13 +66,11 @@ ZipFile::getattr(const char* path, struct stat* stbuf)
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
   stbuf->st_size = m_size;
-  stbuf->st_mtim = m_mtime;
-  return 0;
-}
 
-int
-ZipFile::utimens(const char* path, const struct timespec tv[2])
-{
+  stbuf->st_atim = m_stbuf.st_atim;
+  stbuf->st_mtim = m_stbuf.st_mtim;
+  stbuf->st_ctim = m_stbuf.st_ctim;
+
   return 0;
 }
 
