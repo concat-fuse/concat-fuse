@@ -40,7 +40,6 @@ public:
 
   int read(const char* path, char* buf, size_t len, off_t offset,
            struct fuse_file_info* fi) override;
-  int flush(const char* path, struct fuse_file_info* fi) override;
 
 private:
   SimpleFile(const SimpleFile&) = delete;

@@ -18,6 +18,7 @@
 
 #include <string.h>
 #include <sys/stat.h>
+#include <fuse.h>
 
 #include "util.hpp"
 #include "simple_file_stream.hpp"
@@ -48,15 +49,16 @@ SimpleFile::read(const char* path, char* buf, size_t len, off_t offset,
 }
 
 int
-SimpleFile::flush(const char* path, struct fuse_file_info* fi)
-{
-  return 0;
-}
-
-int
 SimpleFile::open(const char* path, struct fuse_file_info* fi)
 {
-  return 0;
+  if ((fi->flags & O_ACCMODE) == O_RDONLY)
+  {
+    return 0;
+  }
+  else
+  {
+    return -EACCES;
+  }
 }
 
 int
