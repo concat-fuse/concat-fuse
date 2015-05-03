@@ -27,7 +27,6 @@ MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
   m_file_list(std::move(file_list)),
   m_handles()
 {
-  // FIXME: insert code to calculate size
 }
 
 MultiFile::~MultiFile()

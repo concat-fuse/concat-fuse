@@ -81,9 +81,8 @@ MultiFileStream::get_size() const
   return total;
 }
 
-
 int
-MultiFileStream::find_file(size_t* offset)
+MultiFileStream::find_file(size_t* offset) const
 {
   for(size_t i = 0; i < m_files.size(); ++i)
   {
@@ -100,7 +99,7 @@ MultiFileStream::find_file(size_t* offset)
 }
 
 void
-MultiFileStream::read_subfile(const std::string& filename, size_t offset, char* buf, size_t count)
+MultiFileStream::read_subfile(const std::string& filename, size_t offset, char* buf, size_t count) const
 {
   // FIXME: insert error handling here
   int fd = ::open(filename.c_str(), O_RDONLY);

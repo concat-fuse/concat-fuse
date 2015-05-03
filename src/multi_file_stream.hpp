@@ -37,9 +37,8 @@ public:
   void refresh();
 
 private:
-  void collect_file_info();
-  int find_file(size_t* offset);
-  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count);
+  int find_file(size_t* offset) const;
+  void read_subfile(const std::string& filename, size_t offset, char* buf, size_t count) const;
 
 private:
   MultiFileStream(const MultiFileStream&) = delete;
