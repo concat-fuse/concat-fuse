@@ -19,7 +19,7 @@
 #include <string.h>
 
 SimpleFileStream::SimpleFileStream(const std::string& data) :
-  m_data()
+  m_data(data)
 {
 }
 
