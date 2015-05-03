@@ -49,6 +49,7 @@ endif(DEVELOPER)
 
 file(GLOB CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   src/*.cpp)
+list(REMOVE_ITEM CONCAT_FUSE_SOURCES_CXX src/main.cpp)
 
 add_library(libconcat-fuse STATIC ${CONCAT_FUSE_SOURCES_CXX})
 set_target_properties(libconcat-fuse PROPERTIES OUTPUT_NAME concat-fuse)
