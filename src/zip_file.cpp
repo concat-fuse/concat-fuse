@@ -27,8 +27,7 @@ ZipFile::ZipFile(const std::string& filename) :
   m_filename(filename),
   m_size(),
   m_stbuf(),
-  m_handles(),
-  m_mutex()
+  m_handles()
 {
   // FIXME:
   // * options to filter zip file content and customize sorting should
@@ -38,7 +37,7 @@ ZipFile::ZipFile(const std::string& filename) :
   auto data = ZipStream::open(m_filename);
   m_size = data->get_size();
 
-  // get the mtime of the file
+  // get the a,c,mtime of the file
   int ret = stat(m_filename.c_str(), &m_stbuf);
   if (ret < 0)
   {
@@ -52,17 +51,9 @@ ZipFile::~ZipFile()
 {
 }
 
-size_t
-ZipFile::get_size() const
-{
-  return m_size;
-}
-
 int
 ZipFile::getattr(const char* path, struct stat* stbuf)
 {
-  std::lock_guard<std::mutex> lock(m_mutex);
-
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
   stbuf->st_size = m_size;

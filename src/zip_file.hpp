@@ -28,7 +28,7 @@
 
 class ZipStream;
 
-class ZipFile : public File
+class ZipFile final : public File
 {
 private:
   std::string m_filename;
@@ -36,13 +36,10 @@ private:
   struct stat m_stbuf;
 
   HandleStore<std::unique_ptr<ZipStream> > m_handles;
-  std::mutex m_mutex;
 
 public:
   ZipFile(const std::string& filename);
   ~ZipFile();
-
-  size_t get_size() const;
 
   int getattr(const char* path, struct stat* stbuf) override;
 
