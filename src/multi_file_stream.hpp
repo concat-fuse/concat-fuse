@@ -22,19 +22,16 @@
 #include "file_list.hpp"
 #include "stream.hpp"
 
-class MultiFileStream : public Stream
+class MultiFileStream final : public Stream
 {
 private:
-  size_t m_pos;
-  FileList& m_file_list;
-  std::vector<FileInfo> m_files;
+  std::vector<FileInfo>& m_files;
 
 public:
-  MultiFileStream(FileList& file_list);
+  MultiFileStream(std::vector<FileInfo>& file_list);
 
-  ssize_t read(size_t pos, char* buf, size_t count);
+  ssize_t read(size_t pos, char* buf, size_t count) override;
   size_t get_size() const;
-  void refresh();
 
 private:
   int find_file(size_t* offset) const;

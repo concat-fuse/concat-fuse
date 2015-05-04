@@ -21,10 +21,10 @@
 #include <string>
 #include <sys/types.h>
 #include <vector>
+#include <shared_mutex>
 
 #include "file_list.hpp"
 #include "file.hpp"
-#include "handle_store.hpp"
 
 class MultiFileStream;
 
@@ -35,14 +35,14 @@ private:
   struct timespec m_mtime;
 
   std::unique_ptr<FileList> m_file_list;
-  HandleStore<std::unique_ptr<MultiFileStream> > m_handles;
+  std::vector<FileInfo> m_files;
+  std::unique_ptr<MultiFileStream> m_stream;
+
+  std::shared_timed_mutex m_mutex;
 
 public:
   MultiFile(std::unique_ptr<FileList> file_list);
   ~MultiFile();
-
-  size_t get_size() const;
-  struct timespec get_mtime() const;
 
   void refresh();
 

@@ -16,24 +16,28 @@
 
 #include "multi_file_stream.hpp"
 
+#include <fuse.h>
+#include <sstream>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <fuse.h>
 
 #include "util.hpp"
 
-MultiFileStream::MultiFileStream(FileList& file_list) :
-  m_pos(0),
-  m_file_list(file_list),
-  m_files()
+MultiFileStream::MultiFileStream(std::vector<FileInfo>& files) :
+  m_files(files)
 {
 }
 
-void
-MultiFileStream::refresh()
+size_t
+MultiFileStream::get_size() const
 {
-  log_debug("MultiFile::refresh()");
-  m_files = m_file_list.scan();
+  size_t size = 0;
+  for(const auto& file : m_files)
+  {
+    size += file.size;
+  }
+  return size;
 }
 
 ssize_t
@@ -70,17 +74,6 @@ MultiFileStream::read(size_t pos, char* buf, size_t count)
   return total_count;
 }
 
-size_t
-MultiFileStream::get_size() const
-{
-  size_t total = 0;
-  for(const auto& file : m_files)
-  {
-    total += file.size;
-  }
-  return total;
-}
-
 int
 MultiFileStream::find_file(size_t* offset) const
 {
@@ -101,19 +94,33 @@ MultiFileStream::find_file(size_t* offset) const
 void
 MultiFileStream::read_subfile(const std::string& filename, size_t offset, char* buf, size_t count) const
 {
-  // FIXME: insert error handling here
   int fd = ::open(filename.c_str(), O_RDONLY);
   if (fd < 0)
   {
-    perror(filename.c_str());
+    std::ostringstream str;
+    str << filename << ": open() in read_subfile() failed: " << strerror(errno);
+    throw std::runtime_error(str.str());
   }
   else
   {
-    ::lseek(fd, offset, SEEK_SET);
+    if (::lseek(fd, offset, SEEK_SET) < 0)
+    {
+      ::close(fd);
+
+      std::ostringstream str;
+      str << filename << ": lseek() in read_subfile() failed: " << strerror(errno);
+      throw std::runtime_error(str.str());
+    }
+
     if (::read(fd, buf, count) < 0)
     {
-      return; // FIXME: error
+      ::close(fd);
+
+      std::ostringstream str;
+      str << filename << ": read() in read_subfile() failed: " << strerror(errno);
+      throw std::runtime_error(str.str());
     }
+
     ::close(fd);
   }
 }

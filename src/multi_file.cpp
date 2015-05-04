@@ -25,24 +25,15 @@ MultiFile::MultiFile(std::unique_ptr<FileList> file_list) :
   m_size(),
   m_mtime(),
   m_file_list(std::move(file_list)),
-  m_handles()
+  m_files(),
+  m_stream(),
+  m_mutex()
 {
+  refresh();
 }
 
 MultiFile::~MultiFile()
 {
-}
-
-size_t
-MultiFile::get_size() const
-{
-  return m_size;
-}
-
-struct timespec
-MultiFile::get_mtime() const
-{
-  return m_mtime;
 }
 
 int
@@ -50,19 +41,21 @@ MultiFile::getattr(const char* path, struct stat* stbuf)
 {
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
-  stbuf->st_size = get_size();
-  stbuf->st_mtim = get_mtime();
+  stbuf->st_size = m_size;
+  stbuf->st_mtim = m_mtime;
   return 0;
 }
 
 void
 MultiFile::refresh()
 {
-  for(const auto& h : m_handles)
-  {
-    h.second->refresh();
-  }
+  std::lock_guard<std::shared_timed_mutex> lock(m_mutex);
+
   clock_gettime(CLOCK_REALTIME, &m_mtime);
+
+  m_files = m_file_list->scan();
+  m_stream = std::make_unique<MultiFileStream>(m_files);
+  m_size = m_stream->get_size();
 }
 
 int
@@ -77,7 +70,6 @@ MultiFile::open(const char* path, struct fuse_file_info* fi)
 {
   if ((fi->flags & O_ACCMODE) == O_RDONLY)
   {
-    fi->fh = m_handles.store(make_unique<MultiFileStream>(*m_file_list));
     return 0;
   }
   else
@@ -89,7 +81,6 @@ MultiFile::open(const char* path, struct fuse_file_info* fi)
 int
 MultiFile::release(const char* path, struct fuse_file_info* fi)
 {
-  m_handles.drop(fi->fh);
   return 0;
 }
 
@@ -97,7 +88,8 @@ int
 MultiFile::read(const char* path, char* buf, size_t len, off_t offset,
                 struct fuse_file_info* fi)
 {
-  return static_cast<int>(m_handles.get(fi->fh)->read(static_cast<size_t>(offset), buf, len));
+  std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
+  return static_cast<int>(m_stream->read(static_cast<size_t>(offset), buf, len));
 }
 
 /* EOF */
