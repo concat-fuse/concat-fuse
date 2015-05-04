@@ -20,13 +20,13 @@
 #include "file.hpp"
 
 #include <string>
-#include <mutex>
+#include <shared_mutex>
 #include <memory>
 #include <sys/stat.h>
 
 #include "handle_store.hpp"
 
-class ZipStream;
+class ZipFileStream;
 
 class ZipFile final : public File
 {
@@ -35,7 +35,8 @@ private:
   size_t m_size;
   struct stat m_stbuf;
 
-  HandleStore<std::unique_ptr<ZipStream> > m_handles;
+  HandleStore<std::unique_ptr<ZipFileStream> > m_handles;
+  std::shared_timed_mutex m_mutex;
 
 public:
   ZipFile(const std::string& filename);

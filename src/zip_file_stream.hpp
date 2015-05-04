@@ -22,10 +22,11 @@
 #include <vector>
 
 #include <unzip.h>
+#include <mutex>
 
 #include "stream.hpp"
 
-class ZipStream : public Stream
+class ZipFileStream : public Stream
 {
 private:
   struct ZipEntry
@@ -36,18 +37,18 @@ private:
   };
 
 private:
-  ZipStream(unzFile fp);
+  ZipFileStream(unzFile fp);
 
 public:
-  static std::unique_ptr<ZipStream> open(const std::string& filename);
-  ~ZipStream();
+  static std::unique_ptr<ZipFileStream> open(const std::string& filename);
+  ~ZipFileStream();
 
   size_t get_size() const;
 
   ssize_t read(size_t pos, char* buf, size_t count);
 
 private:
-  ssize_t find_file(size_t& offset);
+  ssize_t find_file(size_t& offset) const;
   void read_index();
   void sort_index();
 
@@ -57,10 +58,11 @@ private:
   size_t m_size;
   std::string m_filename;
   std::vector<ZipEntry> m_entries;
+  std::mutex m_mutex;
 
 private:
-  ZipStream(const ZipStream&) = delete;
-  ZipStream& operator=(const ZipStream&) = delete;
+  ZipFileStream(const ZipFileStream&) = delete;
+  ZipFileStream& operator=(const ZipFileStream&) = delete;
 };
 
 #endif

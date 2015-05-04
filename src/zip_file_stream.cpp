@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "zip_stream.hpp"
+#include "zip_file_stream.hpp"
 
 #include <algorithm>
 
 #include "util.hpp"
 
-std::unique_ptr<ZipStream>
-ZipStream::open(const std::string& filename)
+std::unique_ptr<ZipFileStream>
+ZipFileStream::open(const std::string& filename)
 {
   unzFile fp = unzOpen(filename.c_str());
   if (!fp)
@@ -30,7 +30,7 @@ ZipStream::open(const std::string& filename)
   }
   else
   {
-    auto result = std::unique_ptr<ZipStream>(new ZipStream(fp));
+    auto result = std::unique_ptr<ZipFileStream>(new ZipFileStream(fp));
 
     result->read_index();
 
@@ -41,22 +41,8 @@ ZipStream::open(const std::string& filename)
   }
 }
 
-ZipStream::ZipStream(unzFile fp) :
-  m_fp(fp),
-  m_pos(),
-  m_size(),
-  m_filename(),
-  m_entries()
-{
-}
-
-ZipStream::~ZipStream()
-{
-  unzClose(m_fp);
-}
-
 void
-ZipStream::read_index()
+ZipFileStream::read_index()
 {
   // read .zip index
   unzGoToFirstFile(m_fp);
@@ -84,7 +70,7 @@ ZipStream::read_index()
 }
 
 void
-ZipStream::sort_index()
+ZipFileStream::sort_index()
 {
   std::sort(m_entries.begin(), m_entries.end(),
             [](ZipEntry const& lhs, ZipEntry const& rhs){
@@ -92,15 +78,32 @@ ZipStream::sort_index()
             });
 }
 
+ZipFileStream::ZipFileStream(unzFile fp) :
+  m_fp(fp),
+  m_pos(),
+  m_size(),
+  m_filename(),
+  m_entries(),
+  m_mutex()
+{
+}
+
+ZipFileStream::~ZipFileStream()
+{
+  unzClose(m_fp);
+}
+
 size_t
-ZipStream::get_size() const
+ZipFileStream::get_size() const
 {
   return m_size;
 }
 
 ssize_t
-ZipStream::read(size_t pos, char* buf, size_t count)
+ZipFileStream::read(size_t pos, char* buf, size_t count)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
   // FIXME:
   // * seeking should check the current position with unztell() and
   //   the current file and avoid redundant seeking
@@ -174,7 +177,7 @@ ZipStream::read(size_t pos, char* buf, size_t count)
 }
 
 ssize_t
-ZipStream::find_file(size_t& offset)
+ZipFileStream::find_file(size_t& offset) const
 {
   for(size_t i = 0; i < m_entries.size(); ++i)
   {

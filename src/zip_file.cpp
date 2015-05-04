@@ -21,20 +21,20 @@
 #include <sstream>
 
 #include "util.hpp"
-#include "zip_stream.hpp"
+#include "zip_file_stream.hpp"
 
 ZipFile::ZipFile(const std::string& filename) :
   m_filename(filename),
   m_size(),
   m_stbuf(),
-  m_handles()
+  m_handles(),
+  m_mutex()
 {
   // FIXME:
-  // * options to filter zip file content and customize sorting should
-  //   be provided to the user
+  // * add options to filter zip file content and customize sorting
 
   // have a peek inside the Zip to get the size
-  auto data = ZipStream::open(m_filename);
+  auto data = ZipFileStream::open(m_filename);
   m_size = data->get_size();
 
   // get the a,c,mtime of the file
@@ -70,7 +70,8 @@ ZipFile::open(const char* path, struct fuse_file_info* fi)
 {
   if ((fi->flags & O_ACCMODE) == O_RDONLY)
   {
-    fi->fh = m_handles.store(ZipStream::open(m_filename));
+    std::lock_guard<std::shared_timed_mutex> lock(m_mutex);
+    fi->fh = m_handles.store(ZipFileStream::open(m_filename));
     return 0;
   }
   else
@@ -82,6 +83,7 @@ ZipFile::open(const char* path, struct fuse_file_info* fi)
 int
 ZipFile::release(const char* path, struct fuse_file_info* fi)
 {
+  std::lock_guard<std::shared_timed_mutex> lock(m_mutex);
   m_handles.drop(fi->fh);
   return 0;
 }
@@ -90,6 +92,7 @@ int
 ZipFile::read(const char* path, char* buf, size_t len, off_t offset,
               struct fuse_file_info* fi)
 {
+  std::shared_lock<std::shared_timed_mutex> lock(m_mutex);
   return static_cast<int>(m_handles.get(fi->fh)->read(static_cast<size_t>(offset), buf, len));
 }
 
