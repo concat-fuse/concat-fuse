@@ -27,16 +27,16 @@
 
 TEST(ConcatVFSTest, entry_cache)
 {
-  auto vfs = make_unique<ConcatVFS>();
-  auto root = make_unique<SimpleDirectory>();
+  auto vfs = std::make_unique<ConcatVFS>();
+  auto root = std::make_unique<SimpleDirectory>();
   {
-    auto from_file_dir = make_unique<SimpleDirectory>();
-    from_file_dir->add_file("control", make_unique<SimpleFile>("SimpleFile1"));
+    auto from_file_dir = std::make_unique<SimpleDirectory>();
+    from_file_dir->add_file("control", std::make_unique<SimpleFile>("SimpleFile1"));
     root->add_directory("from-file0", std::move(from_file_dir));
   }
   {
-    auto dir = make_unique<SimpleDirectory>();
-    dir->add_file("control", make_unique<SimpleFile>("SimpleFile2"));
+    auto dir = std::make_unique<SimpleDirectory>();
+    dir->add_file("control", std::make_unique<SimpleFile>("SimpleFile2"));
     root->add_directory("from-glob0", std::move(dir));
   }
   vfs->set_root(std::move(root));

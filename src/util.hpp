@@ -48,12 +48,6 @@ size_t get_file_size(const std::string& filename);
 
 std::string path_join(const std::string& base, const std::string& name);
 
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args)
-{
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
 #endif
 
 /* EOF */

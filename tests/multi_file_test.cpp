@@ -30,8 +30,8 @@
 
 TEST(MultiFileTest, test)
 {
-  auto file_list = make_unique<SimpleFileList>(std::vector<std::string>{ "tests/test1.dat", "tests/test2.dat" });
-  auto multi_file = make_unique<MultiFile>(std::move(file_list));
+  auto file_list = std::make_unique<SimpleFileList>(std::vector<std::string>{ "tests/test1.dat", "tests/test2.dat" });
+  auto multi_file = std::make_unique<MultiFile>(std::move(file_list));
 
   struct fuse_file_info fi;
   memset(&fi, 0, sizeof(fi));

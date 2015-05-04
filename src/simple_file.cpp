@@ -24,7 +24,7 @@
 #include "simple_file_stream.hpp"
 
 SimpleFile::SimpleFile(const std::string& data) :
-  m_stream(make_unique<SimpleFileStream>(data))
+  m_stream(std::make_unique<SimpleFileStream>(data))
 {
 }
 

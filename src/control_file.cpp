@@ -102,16 +102,16 @@ ControlFile::release(const char* path, struct fuse_file_info* fi)
     {
       case GLOB_MODE:
         m_directory.add_file(sha1,
-                             make_unique<MultiFile>(make_unique<GlobFileList>(split(data, '\0'))));
+                             std::make_unique<MultiFile>(std::make_unique<GlobFileList>(split(data, '\0'))));
         return 0;
 
       case LIST_MODE:
         m_directory.add_file(sha1,
-                             make_unique<MultiFile>(make_unique<SimpleFileList>(split(data, '\0'))));
+                             std::make_unique<MultiFile>(std::make_unique<SimpleFileList>(split(data, '\0'))));
         return 0;
 
       case ZIP_MODE:
-        m_directory.add_file(sha1, make_unique<ZipFile>(data));
+        m_directory.add_file(sha1, std::make_unique<ZipFile>(data));
         return 0;
 
       default:

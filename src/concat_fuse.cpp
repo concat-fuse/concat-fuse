@@ -242,20 +242,20 @@ init_concat_fuse_ops()
 std::unique_ptr<SimpleDirectory>
 init_concat_fuse_root()
 {
-  auto root = make_unique<SimpleDirectory>();
+  auto root = std::make_unique<SimpleDirectory>();
 
-  root->add_file("VERSION", make_unique<SimpleFile>("2\n"));
+  root->add_file("VERSION", std::make_unique<SimpleFile>("2\n"));
 
-  auto from_file_dir = make_unique<SimpleDirectory>();
-  from_file_dir->add_file("control", make_unique<ControlFile>(*from_file_dir, ControlFile::LIST_MODE));
+  auto from_file_dir = std::make_unique<SimpleDirectory>();
+  from_file_dir->add_file("control", std::make_unique<ControlFile>(*from_file_dir, ControlFile::LIST_MODE));
   root->add_directory("from-file0", std::move(from_file_dir));
 
-  auto from_glob_dir = make_unique<SimpleDirectory>();
-  from_glob_dir->add_file("control", make_unique<ControlFile>(*from_glob_dir, ControlFile::GLOB_MODE));
+  auto from_glob_dir = std::make_unique<SimpleDirectory>();
+  from_glob_dir->add_file("control", std::make_unique<ControlFile>(*from_glob_dir, ControlFile::GLOB_MODE));
   root->add_directory("from-glob0", std::move(from_glob_dir));
 
-  auto from_zip_dir = make_unique<SimpleDirectory>();
-  from_zip_dir->add_file("control", make_unique<ControlFile>(*from_zip_dir, ControlFile::ZIP_MODE));
+  auto from_zip_dir = std::make_unique<SimpleDirectory>();
+  from_zip_dir->add_file("control", std::make_unique<ControlFile>(*from_zip_dir, ControlFile::ZIP_MODE));
   root->add_directory("from-zip", std::move(from_zip_dir));
 
   return root;
@@ -265,7 +265,7 @@ int concat_fuse_main(int argc, char** argv)
 {
   auto ops = init_concat_fuse_ops();
   auto root = init_concat_fuse_root();
-  auto vfs = make_unique<ConcatVFS>();
+  auto vfs = std::make_unique<ConcatVFS>();
 
   vfs->set_root(std::move(root));
 
