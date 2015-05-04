@@ -57,14 +57,16 @@
   <refsect1>
     <title>Structure</title>
     <para>
-      The filesystem, once mounted, provides two subdirectories named
-      <filename>from-file0/</filename> and
-      <filename>from-glob0/</filename>. Writing a '\0' separated list
-      of files or glob pattern to the <filename>control</filename>
-      file within those directories will create a virtual file
-      containing all the content of the individual files. The name of
-      the virtual file is the sha1 checksum of the data written to the
-      control file.
+      The filesystem, once mounted, provides three subdirectories
+      named <filename>from-file0/</filename>,
+      <filename>from-glob0/</filename> and
+      <filename>from-zip/</filename>. Writing a '\0' separated list of
+      files or glob pattern to the <filename>control</filename> file
+      within those directories will create a virtual file containing
+      all the content of the individual files. The
+      <filename>from-zip/control</filename> only takes only a single
+      filename, without a '\0'. The name of the virtual file is the
+      SHA1 checksum of the data written to the control file.
     </para>
   </refsect1>
 

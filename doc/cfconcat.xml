@@ -30,7 +30,7 @@
       <command>cfconcat</command>
       <arg choice="opt" rep="repeat">OPTION</arg>
       <arg choice="opt">-h</arg>
-      <arg choice="opt">GLOB</arg>
+      <arg choice="opt">FILES</arg>
     </cmdsynopsis>
   </refsynopsisdiv>
 
@@ -140,6 +140,13 @@
         <term><option>-g</option> <replaceable>GLOB</replaceable>, <option>--glob</option> <replaceable>GLOB</replaceable></term>
         <listitem>
           <para>Use glob the given <replaceable>GLOB</replaceable></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-z</option> <replaceable>ARCHIVE</replaceable>, <option>--zip</option> <replaceable>ARCHIVE</replaceable></term>
+        <listitem>
+          <para>Read files from a .zip archive instead of from the filesystem</para>
         </listitem>
       </varlistentry>
     </variablelist>

@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH "cfconcat " 1 "6 March 2015" 0.2.0 "User Commands"
+.TH "cfconcat " 1 "4 May 2015" 0.3.0 "User Commands"
 .SH NAME
 cfconcat
 \- Access groups of files as if they were a single large file 
@@ -16,7 +16,7 @@ cfconcat
 \fBcfconcat\fR \kx
 .if (\nx>(\n(.l/2)) .nr x (\n(.l/5)
 'in \n(.iu+\nxu
-[OPTION]\&... [-h] [GLOB]
+[OPTION]\&... [-h] [FILES]
 'in \n(.iu-\nxu
 .ad b
 'hy
@@ -71,6 +71,9 @@ Read files from stdin, '\e0' separated
 .TP 
 \*(T<\fB\-g\fR\*(T> \fIGLOB\fR, \*(T<\fB\-\-glob\fR\*(T> \fIGLOB\fR
 Use glob the given \fIGLOB\fR
+.TP 
+\*(T<\fB\-z\fR\*(T> \fIARCHIVE\fR, \*(T<\fB\-\-zip\fR\*(T> \fIARCHIVE\fR
+Read files from a .zip archive instead of from the filesystem
 .SH EXAMPLE
 A simple example of \fBcfconcat\fR use would look like this:
 .PP
