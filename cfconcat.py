@@ -158,7 +158,7 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print("cfconcat 0.3.0")
+        print("cfconcat 0.3.1")
     elif args.unmount:
         ConcatFuse.unmount(args.mountpoint)
     else:
