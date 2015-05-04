@@ -68,7 +68,7 @@ class ConcatFuse:
         self.check_version()
 
     def check_version(self):
-        expected_version = "2"
+        expected_version = "3"
         with open(os.path.join(self.basedir, "VERSION")) as fin:
             version = fin.read().rstrip()
         if version != expected_version:

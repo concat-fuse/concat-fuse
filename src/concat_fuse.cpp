@@ -244,7 +244,7 @@ init_concat_fuse_root()
 {
   auto root = std::make_unique<SimpleDirectory>();
 
-  root->add_file("VERSION", std::make_unique<SimpleFile>("2\n"));
+  root->add_file("VERSION", std::make_unique<SimpleFile>("3\n"));
 
   auto from_file_dir = std::make_unique<SimpleDirectory>();
   from_file_dir->add_file("control", std::make_unique<ControlFile>(*from_file_dir, ControlFile::LIST_MODE));
