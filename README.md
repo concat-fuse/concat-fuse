@@ -23,10 +23,11 @@ Requirements
 
 * [FUSE](http://fuse.sourceforge.net/)
 * [Mhash](http://mhash.sourceforge.net/)
+* [Minizip](http://www.winimage.com/zLibDll/minizip.html)
 
 On Ubuntu 15.04 they can be installed with:
 
-    apt-get install libfuse-dev libmhash-dev
+    apt-get install libfuse-dev libmhash-dev libminizip-dev
 
 
 Compilation
@@ -34,7 +35,9 @@ Compilation
 
 Compiling is done with `cmake`:
 
-    cmake .
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_BUILD_TYPE=Release
     make
 
 To switch on test case building and extra warning flags use:
