@@ -5,7 +5,7 @@
 \\$2 \(la\\$1\(ra\\$3
 ..
 .if \n(.g .mso www.tmac
-.TH "cfconcat " 1 "4 May 2015" 0.3.0 "User Commands"
+.TH "cfconcat " 1 "12 May 2015" 0.3.2 "User Commands"
 .SH NAME
 cfconcat
 \- Access groups of files as if they were a single large file 
@@ -53,6 +53,15 @@ Don't send file list to concat-fuse, print to stdout
 .TP 
 \*(T<\fB\-k\fR\*(T>, \*(T<\fB\-\-keep\fR\*(T>
 Continue even when files are missing
+.TP 
+\*(T<\fB\-\-ext\fR\*(T> \fISUFFIX\fR
+Add an suffix to the virtual filename, useful in cases
+where an application can't handle arbitary filenames and
+require an extension for proper detection. The
+\fISUFFIX\fR is appended directly to
+the filename and should thus include a dot (i.e.
+\*(T<\fI\&.zip\fR\*(T> and not just
+\*(T<\fIzip\fR\*(T>
 .TP 
 \fIFILES\fR
 Files to virtually concatenate

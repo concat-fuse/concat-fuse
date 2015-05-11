@@ -102,6 +102,19 @@
       </varlistentry>
 
       <varlistentry>
+        <term><option>--ext</option> <replaceable>SUFFIX</replaceable></term>
+        <listitem>
+          <para>Add a suffix to the virtual filename, useful in cases
+          when an application can't handle arbitary filenames and
+          require a file extension to be present. The
+          <replaceable>SUFFIX</replaceable> is appended directly to
+          the filename and should thus include a dot (i.e.
+          <filename>.zip</filename> and not just
+          <filename>zip</filename></para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><replaceable>FILES</replaceable></term>
         <listitem>
           <para>Files to virtually concatenate</para>

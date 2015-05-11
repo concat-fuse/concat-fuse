@@ -25,6 +25,7 @@ import hashlib
 import os
 import subprocess
 import sys
+import tempfile
 
 
 class ConcatFuse:
@@ -120,7 +121,7 @@ def splitlines0(data):
     return lst
 
 
-def main():
+def parse_args():
     parser = argparse.ArgumentParser(description="Create virtual concatenated files.",
                                      epilog="The name of the virtual file is returned on stdout.")
 
@@ -136,7 +137,10 @@ def main():
     concat_fuse_group.add_argument('-m', '--mountpoint', metavar="MOUNTPOINT", type=str, default=None,
                                    help="Use MOUNTPOINT instead of default")
 
-    files_group = parser.add_argument_group("file options", "Options for static file lists.")
+    general_group = parser.add_argument_group("general options")
+    general_group.add_argument('--ext', metavar="EXT", type=str, help="Add an extension to the virtual filename")
+
+    files_group = parser.add_argument_group("file list options", "Options for static file lists.")
     files_group.add_argument('-n', '--dry-run', action='store_true', help="Don't send file list to concat-fuse, print to stdout")
     files_group.add_argument('-k', '--keep', action='store_true', help="Continue even when files are missing")
     files_group.add_argument('FILES', nargs='*', help="Files to virtually concatenate")
@@ -154,86 +158,99 @@ def main():
                                             ("Read files from a .zip archive"))
     zip_group.add_argument('-z', '--zip', metavar='ARCHIVE', action='store', help="Read files from ARCHIVE")
 
+    return parser.parse_args()
 
-    args = parser.parse_args()
+
+def make_virtual_filename(args):
+    # generate the file list
+    files = []
+
+    if args.stdin:
+        files.extend(sys.stdin.read().splitlines())
+    elif args.stdin0:
+        files.extend(splitlines0(sys.stdin.read()))
+
+    for f in args.from_file:
+        with open(f, "r") as fin:
+            files.extend(fin.read().splitlines())
+
+    for f in args.from_file0:
+        with open(f, "rb") as fin:
+            files.extend(splitlines0(fin.read()))
+
+    files.extend(args.FILES)
+
+    files = [os.path.abspath(f) for f in files]
+
+    # generate glob list
+    globs = []
+    globs.extend(args.glob)
+    globs = [os.path.abspath(g) for g in globs]
+
+    # check if arguments are valid
+    if globs and files :
+        raise Exception("Can't mix globs and regular files")
+    elif globs and args.zip:
+        raise Exception("Can't mix globs and zip files")
+    elif files and args.zip:
+        raise Exception("Can't mix files and zip files")
+
+    errors = False
+    for f in files:
+        if not os.path.exists(f):
+            print("%s: No such file or directory" % f, file=sys.stderr)
+            errors = True
+
+    if errors and not args.keep:
+        raise Exception("detected errors when scanning files")
+
+    if files:
+        if args.dry_run:
+            for f in files:
+                print(f)
+        else:
+            concat_fuse = ConcatFuse(args.mountpoint, args.exe)
+            virtual_filename = concat_fuse.concat(files)
+            return virtual_filename
+    elif globs:
+        if args.dry_run:
+            for g in globs:
+                print(g)
+        else:
+            concat_fuse = ConcatFuse(args.mountpoint, args.exe)
+            virtual_filename = concat_fuse.glob(globs)
+            return virtual_filename
+    elif args.zip:
+        zip_filename = os.path.abspath(args.zip)
+        if not os.path.exists(zip_filename):
+            raise Exception("%s: No such file or directory" % zip_filename)
+        else:
+            concat_fuse = ConcatFuse(args.mountpoint, args.exe)
+            virtual_filename = concat_fuse.zip(zip_filename)
+            return virtual_filename
+    else:
+        raise Exception("{}: fatal error: no input files provided" % sys.argv[0])
+
+
+def main():
+    args = parse_args()
 
     if args.version:
-        print("cfconcat 0.3.1")
+        print("cfconcat 0.3.2")
     elif args.unmount:
         ConcatFuse.unmount(args.mountpoint)
     else:
-        # generate the file list
-        files = []
-
-        if args.stdin:
-            files.extend(sys.stdin.read().splitlines())
-        elif args.stdin0:
-            files.extend(splitlines0(sys.stdin.read()))
-
-        for f in args.from_file:
-            with open(f, "r") as fin:
-                files.extend(fin.read().splitlines())
-
-        for f in args.from_file0:
-            with open(f, "rb") as fin:
-                files.extend(splitlines0(fin.read()))
-
-        files.extend(args.FILES)
-
-        files = [os.path.abspath(f) for f in files]
-
-        # generate glob list
-        globs = []
-        globs.extend(args.glob)
-        globs = [os.path.abspath(g) for g in globs]
-
-        # check if arguments are valid
-        if globs and files :
-            print("Can't mix globs and regular files", file=sys.stderr)
-            sys.exit(1)
-        elif globs and args.zip:
-            print("Can't mix globs and zip files", file=sys.stderr)
-            sys.exit(1)
-        elif files and args.zip:
-            print("Can't mix files and zip files", file=sys.stderr)
-            sys.exit(1)
-
-        errors = False
-        for f in files:
-            if not os.path.exists(f):
-                print("%s: No such file or directory" % f, file=sys.stderr)
-                errors = True
-
-        if errors and not args.keep:
-            sys.exit(1)
-
-        if files:
-            if args.dry_run:
-                for f in files:
-                    print(f)
+        try:
+            virtual_filename = make_virtual_filename(args)
+            if args.ext is not None:
+                dir = tempfile.mkdtemp()
+                link_name = os.path.join(dir, os.path.basename(virtual_filename) + args.ext)
+                os.symlink(virtual_filename, link_name)
+                print(link_name)
             else:
-                concat_fuse = ConcatFuse(args.mountpoint, args.exe)
-                virtual_filename = concat_fuse.concat(files)
                 print(virtual_filename)
-        elif globs:
-            if args.dry_run:
-                for g in globs:
-                    print(g)
-            else:
-                concat_fuse = ConcatFuse(args.mountpoint, args.exe)
-                virtual_filename = concat_fuse.glob(globs)
-                print(virtual_filename)
-        elif args.zip:
-            zip_filename = os.path.abspath(args.zip)
-            if not os.path.exists(zip_filename):
-                print("%s: No such file or directory" % zip_filename, file=sys.stderr)
-                sys.exit(1)
-            else:
-                concat_fuse = ConcatFuse(args.mountpoint, args.exe)
-                virtual_filename = concat_fuse.zip(zip_filename)
-                print(virtual_filename)
-        else:
-            print("%s: fatal error: no input files provided" % sys.argv[0], file=sys.stderr)
+        except Exception as err:
+            print("error: {}".format(err), file=sys.stderr)
             sys.exit(1)
 
 
