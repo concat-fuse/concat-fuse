@@ -31,7 +31,7 @@ public:
   MultiFileStream(std::vector<FileInfo>& file_list);
 
   ssize_t read(size_t pos, char* buf, size_t count) override;
-  size_t get_size() const;
+  size_t get_size() const override;
 
 private:
   int find_file(size_t* offset) const;

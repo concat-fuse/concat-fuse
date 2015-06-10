@@ -31,8 +31,8 @@ void format(std::ostream& os, const char* fmt, Args&&... args)
 {
   size_t arg_idx = 0;
 
-  size_t start = 0;
-  size_t i = 0;
+  std::streamsize start = 0;
+  std::streamsize i = 0;
   while(fmt[i] != '\0')
   {
     if (fmt[i] == '{')
