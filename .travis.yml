@@ -43,7 +43,7 @@ env:
 
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install build-essential cmake libfuse-dev libmhash-dev libminizip-dev
+  - sudo apt-get install build-essential cmake libfuse-dev libmhash-dev
 
   # Current gcc that supports C++ 11 features
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
@@ -54,6 +54,9 @@ before_install:
   # CMake
   - wget http://www.cmake.org/files/v3.2/cmake-$CMAKE_VERSION.tar.gz -O - | tar xz
   - (cd cmake-$CMAKE_VERSION && cmake . && make -j3 && sudo make install)
+
+  - wget http://pingus.seul.org/~grumbel/tmp/minizip-1.1.tar.gz -O - | tar xz
+  - (cd minizip-1.1 && ./configure && make && make install)
 
 script:
   # Clean from previous Travis build
