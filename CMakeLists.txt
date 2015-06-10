@@ -22,7 +22,16 @@ find_library(RT rt)
 
 find_package(PkgConfig REQUIRED)
 pkg_search_module(FUSE REQUIRED fuse)
-pkg_search_module(MHASH REQUIRED mhash)
+
+# older versions don't have a mhash.pc
+pkg_search_module(MHASH mhash)
+if(NOT ${MHASH_FOUND})
+  find_library(MHASH_LIBRARIES mhash)
+  if(MHASH_LIBRARIES-NOTFOUND)
+    message(FATAL_ERROR "required library mhash not found")
+  endif()
+endif()
+
 pkg_search_module(MINIZIP REQUIRED minizip)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
