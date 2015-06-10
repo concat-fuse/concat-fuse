@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/concat-fuse/concat-fuse.svg?branch=master)](https://travis-ci.org/concat-fuse/concat-fuse)
+
 concat-fuse
 ===========
 
