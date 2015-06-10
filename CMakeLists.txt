@@ -25,8 +25,9 @@ pkg_search_module(FUSE REQUIRED fuse)
 
 # older versions don't have a mhash.pc
 pkg_search_module(MHASH mhash)
-if(NOT ${MHASH_FOUND})
+if(NOT MHASH_FOUND)
   find_library(MHASH_LIBRARIES mhash)
+  message(STATUS "Found mhash: ${MHASH_LIBRARIES}")
   if(MHASH_LIBRARIES-NOTFOUND)
     message(FATAL_ERROR "required library mhash not found")
   endif()
