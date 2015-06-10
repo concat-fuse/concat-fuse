@@ -56,7 +56,7 @@ before_install:
   - (cd cmake-$CMAKE_VERSION && cmake . && make -j3 && sudo make install)
 
   - wget http://pingus.seul.org/~grumbel/tmp/minizip-1.1.tar.gz -O - | tar xz
-  - (cd minizip-1.1 && ./configure && make && make install)
+  - (cd minizip-1.1 && ./configure && make && sudo make install)
 
 script:
   # Clean from previous Travis build
