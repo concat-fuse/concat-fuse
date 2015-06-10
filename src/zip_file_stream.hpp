@@ -54,7 +54,6 @@ private:
 
 private:
   unzFile m_fp;
-  size_t m_pos;
   size_t m_size;
   std::string m_filename;
   std::vector<ZipEntry> m_entries;

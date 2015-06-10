@@ -80,7 +80,6 @@ ZipFileStream::sort_index()
 
 ZipFileStream::ZipFileStream(unzFile fp) :
   m_fp(fp),
-  m_pos(),
   m_size(),
   m_filename(),
   m_entries(),
