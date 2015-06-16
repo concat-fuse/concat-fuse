@@ -12,7 +12,12 @@ they were a single one. It is essentially doing:
 But instead of creating `large_file`, it creates a virtual file and
 accesses the original `*.txt` files instead. Alternatives such as
 `mkfifo` or regular piping can be used similarly, but fail at
-providing random access to the data.
+providing random access to the data. The process substitution feature
+of Bash is the closest analog to concat-fuse:
+
+    less <(cat *.txt)
+
+However like a manual `mkfifo` it will fail at random access.
 
 `concat-fuse` is especially useful when it comes to do gapless
 playback of video files (when the video format allows it) or to
