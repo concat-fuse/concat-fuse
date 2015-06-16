@@ -41,7 +41,7 @@ MultiFile::getattr(const char* path, struct stat* stbuf)
 {
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
-  stbuf->st_size = m_size;
+  stbuf->st_size = static_cast<off_t>(m_size);
   stbuf->st_mtim = m_mtime;
   return 0;
 }

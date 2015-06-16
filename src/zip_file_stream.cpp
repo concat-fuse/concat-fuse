@@ -120,12 +120,14 @@ ZipFileStream::read(size_t pos, char* buf, size_t count)
   while(count != 0)
   {
     size_t rel_offset = pos + total_count;
-    ssize_t idx = find_file(rel_offset);
-    if (idx < 0)
+    ssize_t idx_or_error = find_file(rel_offset);
+    if (idx_or_error < 0)
     {
       log_debug("zip entry not found: size={} pos={} count={}", m_size, pos, count);
       return -1;
     }
+
+    size_t idx = static_cast<size_t>(idx_or_error);
 
     unzGoToFilePos(m_fp, &m_entries[idx].pos);
     size_t data_left = m_entries[idx].uncompressed_size - rel_offset;
@@ -147,32 +149,33 @@ ZipFileStream::read(size_t pos, char* buf, size_t count)
     }
 
     // read the data
-    ssize_t read_amount = std::min(data_left, count);
-    ssize_t len = unzReadCurrentFile(m_fp, buf, static_cast<unsigned int>(read_amount));
-    if (len == 0)
+    ssize_t read_amount = static_cast<ssize_t>(std::min(data_left, count));
+    ssize_t len_or_error = unzReadCurrentFile(m_fp, buf, static_cast<unsigned int>(read_amount));
+    if (len_or_error == 0)
     {
       log_debug("{}: unexpected eof", m_filename);
       return -1;
     }
-    else if (len < 0)
+    else if (len_or_error < 0)
     {
       log_debug("{}: uncompression error", m_filename);
       return -1;
     }
-    else if (len != read_amount)
+    else if (len_or_error != read_amount)
     {
       log_debug("{}: unexpected short read", m_filename);
       return -1;
     }
     else
     {
+      size_t len = static_cast<size_t>(len_or_error);
       total_count += len;
       count -= len;
       buf += len;
     }
   }
 
-  return total_count;
+  return static_cast<ssize_t>(total_count);
 }
 
 ssize_t
@@ -182,7 +185,7 @@ ZipFileStream::find_file(size_t& offset) const
   {
     if (offset < m_entries[i].uncompressed_size)
     {
-      return i;
+      return static_cast<ssize_t>(i);
     }
     else
     {

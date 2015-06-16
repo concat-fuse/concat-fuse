@@ -56,7 +56,7 @@ ZipFile::getattr(const char* path, struct stat* stbuf)
 {
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
-  stbuf->st_size = m_size;
+  stbuf->st_size = static_cast<off_t>(m_size);
 
   stbuf->st_atim = m_stbuf.st_atim;
   stbuf->st_mtim = m_stbuf.st_mtim;

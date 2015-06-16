@@ -30,7 +30,7 @@ SimpleFileStream::read(size_t pos, char* buf, size_t count)
   {
     size_t len = std::min(m_data.size() - pos, count);
     memcpy(buf, m_data.data() + pos, len);
-    return len;
+    return static_cast<ssize_t>(len);
   }
   else
   {

@@ -37,7 +37,7 @@ SimpleFile::getattr(const char* path, struct stat* stbuf)
 {
   stbuf->st_mode = S_IFREG | 0444;
   stbuf->st_nlink = 2;
-  stbuf->st_size = m_stream->get_size();
+  stbuf->st_size = static_cast<off_t>(m_stream->get_size());
   return 0;
 }
 
@@ -45,7 +45,7 @@ int
 SimpleFile::read(const char* path, char* buf, size_t len, off_t offset,
                  struct fuse_file_info* fi)
 {
-  return static_cast<int>(m_stream->read(offset, buf, len));
+  return static_cast<int>(m_stream->read(static_cast<size_t>(offset), buf, len));
 }
 
 int

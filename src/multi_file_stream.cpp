@@ -49,15 +49,16 @@ MultiFileStream::read(size_t pos, char* buf, size_t count)
   while(count != 0)
   {
     size_t offset = pos;
-    int idx = find_file(&offset);
-    log_debug("found file: {} {} {} {}", pos, idx, offset, count);
-    if (idx < 0)
+    int idx_or_error = find_file(&offset);
+    log_debug("found file: {} {} {} {}", pos, idx_or_error, offset, count);
+    if (idx_or_error < 0)
     {
       log_debug("EOF reached: {}", total_count);
-      return total_count;
+      return static_cast<ssize_t>(total_count);
     }
     else
     {
+      size_t idx = static_cast<size_t>(idx_or_error);
       size_t read_count = count;
       if (m_files[idx].size - offset < count)
       {
@@ -71,7 +72,7 @@ MultiFileStream::read(size_t pos, char* buf, size_t count)
     }
   }
   log_debug("count = {}", count);
-  return total_count;
+  return static_cast<ssize_t>(total_count);
 }
 
 int
@@ -103,7 +104,7 @@ MultiFileStream::read_subfile(const std::string& filename, size_t offset, char* 
   }
   else
   {
-    if (::lseek(fd, offset, SEEK_SET) < 0)
+    if (::lseek(fd, static_cast<off_t>(offset), SEEK_SET) < 0)
     {
       ::close(fd);
 
