@@ -61,7 +61,7 @@ script:
   # Then build:
   - mkdir "build-$BUILD_TYPE"
   - cd "build-$BUILD_TYPE"
-  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWERROR=ON -DWARNINGS=ON
+  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWERROR=ON -DWARNINGS=ON -DBUILD_TESTS=ON
   - make VERBOSE=1 -j3
   - cd ..
   - build-${BUILD_TYPE}/test_concat_fuse
