@@ -36,9 +36,10 @@ endif()
 pkg_search_module(MINIZIP REQUIRED minizip)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG} -DNDEBUG)
 
-if(DEVELOPER)
-  set(WARNING_CXX_FLAGS
+if(WARNINGS)
+  set(WARNING_CXX_FLAGS ${WARNING_CXX_FLAGS}
     -pedantic
     -Wall
     -Wextra
@@ -46,16 +47,18 @@ if(DEVELOPER)
     -Wnon-virtual-dtor
     -Weffc++
     -Wconversion
-    -Werror
     -Wshadow
     -Wcast-qual
     -Winit-self # only works with >= -O1
     -Wno-unused-parameter
     -Wfloat-equal
     -Wunreachable-code)
-else(DEVELOPER)
-  set(WARNING_CXX_FLAGS -DNDEBUG)
-endif(DEVELOPER)
+endif()
+
+if(WERROR)
+  set(WARNING_CXX_FLAGS ${WARNING_CXX_FLAGS}
+    -Werror)
+endif()
 
 file(GLOB CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   src/*.cpp)

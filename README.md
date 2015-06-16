@@ -49,7 +49,7 @@ Compiling is done with `cmake`:
 
 To switch on test case building and extra warning flags use:
 
-    cmake .. -DBUILD_TESTS=1 -DDEVELOPER=1
+    cmake .. -DBUILD_TESTS=ON -DWARNINGS=ON -DWERROR=ON
 
 
 Installation
