@@ -138,7 +138,7 @@ ZipFileStream::read(size_t pos, char* buf, size_t count)
     char tmpbuf[1024 * 16];
     while(rel_offset != 0)
     {
-      unsigned read_length = (rel_offset > sizeof(tmpbuf)) ? sizeof(tmpbuf) : static_cast<unsigned>(rel_offset);
+      unsigned read_length = static_cast<unsigned>((rel_offset > sizeof(tmpbuf)) ? sizeof(tmpbuf) : rel_offset);
       int len_or_error = unzReadCurrentFile(m_fp, tmpbuf, read_length);
       if (len_or_error == 0)
       {
