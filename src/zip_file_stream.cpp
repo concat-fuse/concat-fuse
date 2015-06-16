@@ -138,13 +138,21 @@ ZipFileStream::read(size_t pos, char* buf, size_t count)
     char tmpbuf[1024 * 16];
     while(rel_offset != 0)
     {
-      if (rel_offset > sizeof(tmpbuf))
+      unsigned read_length = (rel_offset > sizeof(tmpbuf)) ? sizeof(tmpbuf) : static_cast<unsigned>(rel_offset);
+      int len_or_error = unzReadCurrentFile(m_fp, tmpbuf, read_length);
+      if (len_or_error == 0)
       {
-        rel_offset -= unzReadCurrentFile(m_fp, tmpbuf, sizeof(tmpbuf));
+        log_debug("{}: unexpected eof", m_filename);
+        return -1;
+      }
+      else if (len_or_error < 0)
+      {
+        log_debug("{}: uncompression error", m_filename);
+        return -1;
       }
       else
       {
-        rel_offset -= unzReadCurrentFile(m_fp, tmpbuf, static_cast<unsigned int>(rel_offset));
+        rel_offset -= static_cast<size_t>(len_or_error);
       }
     }
 
