@@ -27,6 +27,7 @@ language: cpp
 
 compiler:
   - gcc
+  - clang
 
 matrix:
   fast_finish: true
@@ -41,6 +42,15 @@ env:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install build-essential cmake libfuse-dev libmhash-dev
+
+  # patch for mhash, see https://bugs.launchpad.net/ubuntu/+source/mhash/+bug/1465562
+  - sudo sed -i "s/_Bool/bool/" /usr/include/mutils/mutils.h
+
+  # Clang 3.7
+  - sudo add-apt-repository -y "deb http://llvm.org/apt/precise/ llvm-toolchain-precise main"
+  - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
+  - sudo apt-get install clang-3.7
+  - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.7"; fi
 
   # Current gcc that supports C++ 11 features
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
