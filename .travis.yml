@@ -35,6 +35,9 @@ matrix:
 env:
   global:
     - CMAKE_VERSION=3.2.1 SDL2_VERSION=2.0.3 SDL2IMAGE_VERSION=2.0.0 SDL2MIXER_VERSION=2.0.0
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "AtR7gmKt+2SbicF0q9DycyB0bqDdao1vUp2xOOCqRt5+DNX1bu2+6HudWOduSppduzlc8NhN+Gmewe9Amv80YFM/MgwR+fi+zC5NvxcAyRfKmDYUJGjvMNAJ/YQDg4jyKOiXOiM3NvPTHYh5qAb81fofQXsvGLh3fNTA3x7dduQ="
   matrix:
     - BUILD_TYPE="Debug"
     - BUILD_TYPE="Release"
@@ -81,5 +84,15 @@ script:
   - make VERBOSE=1 -k
   - cd ..
   - build-${BUILD_TYPE}/test_concat_fuse
+
+addons:
+  coverity_scan:
+    project:
+      name: "concat-fuse/concat-fuse"
+      description: "Build submitted via Travis CI"
+    notification_email: grumbel@gmail.com
+    build_command_prepend: "cmake . && make clean"
+    build_command: "make"
+    branch_pattern: coverity_scan
 
 # EOF #
