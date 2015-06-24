@@ -62,7 +62,7 @@ public:
     auto it = m_items.find(id);
     T tmp(std::move(it->second));
     m_items.erase(it);
-    return std::move(tmp);
+    return tmp;
   }
 
   iterator begin() { return m_items.begin(); }
