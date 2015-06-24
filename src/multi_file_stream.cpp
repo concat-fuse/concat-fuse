@@ -113,14 +113,43 @@ MultiFileStream::read_subfile(const std::string& filename, size_t offset, char* 
       throw std::runtime_error(str.str());
     }
 
-    if (::read(fd, buf, count) < 0)
+    do
     {
-      ::close(fd);
+      ssize_t len_or_error = ::read(fd, buf, count);
+      if (len_or_error < 0)
+      {
+        ::close(fd);
 
-      std::ostringstream str;
-      str << filename << ": read() in read_subfile() failed: " << strerror(errno);
-      throw std::runtime_error(str.str());
-    }
+        std::ostringstream str;
+        str << filename << ": read() in read_subfile() failed: " << strerror(errno);
+        throw std::runtime_error(str.str());
+      }
+      else
+      {
+        size_t len = static_cast<size_t>(len_or_error);
+        if (len > count)
+        {
+          ::close(fd);
+
+          std::ostringstream str;
+          str << filename << ": read() in read_subfile() failed: unexpected long read?! This should never happen";
+          throw std::runtime_error(str.str());
+        }
+        else if (len == 0)
+        {
+          ::close(fd);
+
+          std::ostringstream str;
+          str << filename << ": read() in read_subfile() failed: unexpected EOF";
+          throw std::runtime_error(str.str());
+        }
+        else
+        {
+          count -= len;
+          buf += len;
+        }
+      }
+    } while(count != 0);
 
     ::close(fd);
   }
