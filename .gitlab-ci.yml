@@ -31,6 +31,7 @@ before_script:
     clang-6.0
     libfuse-dev
     libmhash-dev
+    libminizip-dev
 
 .build_template: &build
   stage: build
