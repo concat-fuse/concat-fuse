@@ -19,6 +19,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <functional>
 
 #include "directory.hpp"
 
