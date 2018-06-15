@@ -68,7 +68,7 @@ add_library(libconcat-fuse STATIC ${CONCAT_FUSE_SOURCES_CXX})
 set_target_properties(libconcat-fuse PROPERTIES OUTPUT_NAME concat-fuse)
 target_compile_definitions(libconcat-fuse PUBLIC -D__STDC_CONSTANT_MACROS)
 target_compile_options(libconcat-fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNING_CXX_FLAGS})
-target_link_libraries(libconcat-fuse PUBLIC ${MINIZIP_LIBRARIES})
+target_link_libraries(libconcat-fuse PUBLIC ${MINIZIP_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(libconcat-fuse PUBLIC ${MINIZIP_INCLUDE_DIRS})
 
 add_executable(concat-fuse src/main.cpp)
@@ -97,7 +97,7 @@ if(BUILD_TESTS)
   target_compile_options(test_concat_fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNING_CXX_FLAGS})
   target_include_directories(test_concat_fuse SYSTEM PUBLIC ${FUSE_INCLUDE_DIRS} ${MHASH_INCLUDE_DIRS})
   target_link_libraries(test_concat_fuse libconcat-fuse ${FUSE_LIBRARIES} ${MHASH_LIBRARIES})
-  target_link_libraries(test_concat_fuse ${CMAKE_THREAD_LIBS_INIT})
+
 endif(BUILD_TESTS)
 
 install(TARGETS concat-fuse
