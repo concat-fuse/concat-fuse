@@ -229,7 +229,7 @@ def make_virtual_filename(args):
             virtual_filename = concat_fuse.zip(zip_filename)
             return virtual_filename
     else:
-        raise Exception("{}: fatal error: no input files provided" % sys.argv[0])
+        raise Exception("%s: fatal error: no input files provided" % sys.argv[0])
 
 
 def main():
