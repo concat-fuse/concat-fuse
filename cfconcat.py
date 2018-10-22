@@ -71,7 +71,7 @@ class ConcatFuse:
         with open(os.path.join(self.basedir, "VERSION")) as fin:
             version = fin.read().rstrip()
         if version != expected_version:
-            raise Exception("incorrect concat-fuse version, expected %s got %s" % (expected_version, version))
+            raise Exception("incorrect concat-fuse version, expected {} got {}".format(expected_version, version))
 
     def concat(self, files):
         """Send the file list to concat-fuse and return the filename of the virtual file"""
@@ -196,7 +196,7 @@ def make_virtual_filename(args):
     errors = False
     for f in files:
         if not os.path.exists(f):
-            print("%s: No such file or directory" % f, file=sys.stderr)
+            print("{}: No such file or directory".format(f), file=sys.stderr)
             errors = True
 
     if errors and not args.keep:
@@ -221,13 +221,13 @@ def make_virtual_filename(args):
     elif args.zip:
         zip_filename = os.path.abspath(args.zip)
         if not os.path.exists(zip_filename):
-            raise Exception("%s: No such file or directory" % zip_filename)
+            raise Exception("{}: No such file or directory".format(zip_filename))
         else:
             concat_fuse = ConcatFuse(args.mountpoint, args.exe)
             virtual_filename = concat_fuse.zip(zip_filename)
             return virtual_filename
     else:
-        raise Exception("%s: fatal error: no input files provided" % sys.argv[0])
+        raise Exception("{}: fatal error: no input files provided".format(sys.argv[0]))
 
 
 def main():
