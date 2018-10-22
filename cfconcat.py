@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # concat-fuse
 # Copyright (C) 2015 Ingo Ruhnke <grumbel@gmail.com>
@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from __future__ import print_function
 
 import argparse
 import glob
