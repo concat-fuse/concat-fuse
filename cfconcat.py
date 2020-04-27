@@ -18,12 +18,14 @@
 
 
 import argparse
-import glob
 import hashlib
 import os
 import subprocess
 import sys
 import tempfile
+
+
+from typing import List
 
 
 class ConcatFuse:
@@ -136,25 +138,35 @@ def parse_args():
                                    help="Use MOUNTPOINT instead of default")
 
     general_group = parser.add_argument_group("general options")
-    general_group.add_argument('--ext', metavar="EXT", type=str, help="Add an extension to the virtual filename")
+    general_group.add_argument('--ext', metavar="EXT", type=str,
+                               help="Add an extension to the virtual filename")
 
     files_group = parser.add_argument_group("file list options", "Options for static file lists.")
-    files_group.add_argument('-n', '--dry-run', action='store_true', help="Don't send file list to concat-fuse, print to stdout")
-    files_group.add_argument('-k', '--keep', action='store_true', help="Continue even when files are missing")
-    files_group.add_argument('FILES', nargs='*', help="Files to virtually concatenate")
-    files_group.add_argument('--from-file', metavar='FILE', action='append', default=[], help="Read files from FILE, newline separated")
-    files_group.add_argument('--from-file0', metavar='FILE', action='append', default=[], help="Read files from FILE, '\\0' separated")
-    files_group.add_argument('-', dest="stdin", action='store_true', help="Read files from stdin")
-    files_group.add_argument('-0', dest="stdin0", action='store_true', help="Read files from stdin, '\\0' separated")
+    files_group.add_argument('-n', '--dry-run', action='store_true',
+                             help="Don't send file list to concat-fuse, print to stdout")
+    files_group.add_argument('-k', '--keep', action='store_true',
+                             help="Continue even when files are missing")
+    files_group.add_argument('FILES', nargs='*',
+                             help="Files to virtually concatenate")
+    files_group.add_argument('--from-file', metavar='FILE', action='append', default=[],
+                             help="Read files from FILE, newline separated")
+    files_group.add_argument('--from-file0', metavar='FILE', action='append', default=[],
+                             help="Read files from FILE, '\\0' separated")
+    files_group.add_argument('-', dest="stdin", action='store_true',
+                             help="Read files from stdin")
+    files_group.add_argument('-0', dest="stdin0", action='store_true',
+                             help="Read files from stdin, '\\0' separated")
 
     glob_group = parser.add_argument_group("glob options",
-                                            ("Glob pattern act as dynamic file lists and the underlying virtual "
+                                           ("Glob pattern act as dynamic file lists and the underlying virtual "
                                             "file can be dynamically updated when new files arrive."))
-    glob_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[], help="Use glob pattern to select files")
+    glob_group.add_argument('-g', '--glob', metavar='GLOB', action='append', default=[],
+                            help="Use glob pattern to select files")
 
     zip_group = parser.add_argument_group("zip options",
-                                            ("Read files from a .zip archive"))
-    zip_group.add_argument('-z', '--zip', metavar='ARCHIVE', action='store', help="Read files from ARCHIVE")
+                                          ("Read files from a .zip archive"))
+    zip_group.add_argument('-z', '--zip', metavar='ARCHIVE', action='store',
+                           help="Read files from ARCHIVE")
 
     return parser.parse_args()
 
@@ -186,7 +198,7 @@ def make_virtual_filename(args):
     globs = [os.path.abspath(g) for g in globs]
 
     # check if arguments are valid
-    if globs and files :
+    if globs and files:
         raise Exception("Can't mix globs and regular files")
     elif globs and args.zip:
         raise Exception("Can't mix globs and zip files")
