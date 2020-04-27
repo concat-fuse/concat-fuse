@@ -238,18 +238,14 @@ def main():
     elif args.unmount:
         ConcatFuse.unmount(args.mountpoint)
     else:
-        try:
-            virtual_filename = make_virtual_filename(args)
-            if args.ext is not None:
-                dir = tempfile.mkdtemp()
-                link_name = os.path.join(dir, os.path.basename(virtual_filename) + args.ext)
-                os.symlink(virtual_filename, link_name)
-                print(link_name)
-            else:
-                print(virtual_filename)
-        except Exception as err:
-            print("error: {}".format(err), file=sys.stderr)
-            sys.exit(1)
+        virtual_filename = make_virtual_filename(args)
+        if args.ext is not None:
+            dir = tempfile.mkdtemp()
+            link_name = os.path.join(dir, os.path.basename(virtual_filename) + args.ext)
+            os.symlink(virtual_filename, link_name)
+            print(link_name)
+        else:
+            print(virtual_filename)
 
 
 if __name__ == "__main__":
