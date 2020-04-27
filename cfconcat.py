@@ -75,11 +75,11 @@ class ConcatFuse:
         if version != expected_version:
             raise Exception("incorrect concat-fuse version, expected {} got {}".format(expected_version, version))
 
-    def concat(self, files):
+    def concat(self, files: List[str]):
         """Send the file list to concat-fuse and return the filename of the virtual file"""
 
         # write the file list to concat-fuse
-        files_serialized = "\0".join(files)
+        files_serialized: bytes = b"\0".join([os.fsencode(f) for f in files])
         with open(os.path.join(self.basedir, "from-file0/control"), "wb") as fout:
             fout.write(files_serialized)
 
