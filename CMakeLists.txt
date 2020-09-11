@@ -77,7 +77,7 @@ target_link_libraries(concat-fuse libconcat-fuse ${FUSE_LIBRARIES} ${MHASH_LIBRA
 target_compile_options(concat-fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNING_CXX_FLAGS})
 
 if(BUILD_TESTS)
-  find_package(GTest)
+  find_package(GTest REQUIRED)
 
   file(GLOB TEST_CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     tests/*_test.cpp)
