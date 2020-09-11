@@ -17,6 +17,7 @@
 #ifndef HEADER_CONTROL_FILE_HPP
 #define HEADER_CONTROL_FILE_HPP
 
+#include <string>
 #include <vector>
 
 #include "file.hpp"
