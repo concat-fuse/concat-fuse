@@ -77,23 +77,13 @@ target_link_libraries(concat-fuse libconcat-fuse ${FUSE_LIBRARIES} ${MHASH_LIBRA
 target_compile_options(concat-fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNING_CXX_FLAGS})
 
 if(BUILD_TESTS)
-  # Note: include directories must use the absolute path as otherwise SYSTEM
-  # bugs out and uses -I instead of -isystem
-  add_library(gtest STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/src/gtest-all.cc)
-  target_include_directories(gtest SYSTEM PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/include/
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/)
-
-  add_library(gtest_main STATIC ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/src/gtest_main.cc)
-  target_include_directories(gtest_main SYSTEM PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/include/
-    ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/)
+  find_package(GTest)
 
   file(GLOB TEST_CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     tests/*_test.cpp)
   add_executable(test_concat_fuse ${TEST_CONCAT_FUSE_SOURCES_CXX})
   target_include_directories(test_concat_fuse PUBLIC src/ test/)
-  target_link_libraries(test_concat_fuse libconcat-fuse gtest gtest_main)
+  target_link_libraries(test_concat_fuse libconcat-fuse GTest::GTest GTest::Main)
   target_compile_options(test_concat_fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNING_CXX_FLAGS})
   target_include_directories(test_concat_fuse SYSTEM PUBLIC ${FUSE_INCLUDE_DIRS} ${MHASH_INCLUDE_DIRS})
   target_link_libraries(test_concat_fuse libconcat-fuse ${FUSE_LIBRARIES} ${MHASH_LIBRARIES})
