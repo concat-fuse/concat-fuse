@@ -20,6 +20,7 @@ project(concat-fuse)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/external/cmake-modules/)
 
 include(MaximumWarnings)
+include(ClangTidy)
 
 find_package(Threads REQUIRED)
 find_library(RT rt)
