@@ -22,6 +22,7 @@
              ((guix licenses) #:prefix license:)
              (guix packages)
              (gnu packages compression)
+             (gnu packages check)
              (gnu packages linux)
              (gnu packages mcrypt)
              (gnu packages pkg-config)
@@ -43,6 +44,7 @@
     `(("pkg-config" ,pkg-config)))
    (inputs
     `(("python" ,python)
+      ("googletest" ,googletest)
       ("fuse" ,fuse)
       ("libmhash" ,libmhash)
       ("minizip" ,minizip)))
