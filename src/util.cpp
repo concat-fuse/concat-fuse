@@ -19,11 +19,12 @@
 #include <array>
 #include <fcntl.h>
 #include <iomanip>
-#include <mhash.h>
 #include <sstream>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+#include <openssl/sha.h>
 
 bool is_hex(char c)
 {
@@ -123,22 +124,17 @@ std::string sha1sum(const std::string& data)
 
 std::string sha1sum(const char* data, size_t len)
 {
-  MHASH td = mhash_init(MHASH_SHA1);
-  if (td == MHASH_FAILED)
-  {
-    return std::string();
-  }
-  else
-  {
-    mhash(td, data, static_cast<mutils_word32>(len));
-    std::array<uint8_t, 20> digest;
-    mhash_deinit(td, digest.data());
+  SHA_CTX ctx;
+  SHA1_Init(&ctx);
+  SHA1_Update(&ctx, data, len);
 
-    std::ostringstream out;
-    for (mutils_word32 i = 0; i < digest.size(); ++i)
-      out << std::setfill('0') << std::setw(2) << std::hex << int(digest[i]);
-    return out.str();
-  }
+  std::array<uint8_t, SHA_DIGEST_LENGTH> digest;
+  SHA1_Final(digest.data(), &ctx);
+
+  std::ostringstream out;
+  for (size_t i = 0; i < digest.size(); ++i)
+    out << std::setfill('0') << std::setw(2) << std::hex << int(digest[i]);
+  return out.str();
 }
 
 std::vector<std::string> split(const std::string& str, char c)

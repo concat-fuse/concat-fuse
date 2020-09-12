@@ -27,6 +27,7 @@
              (gnu packages mcrypt)
              (gnu packages pkg-config)
              (gnu packages python)
+             (gnu packages tls)
              (guix-cocfree utils))
 
 (define %source-dir (dirname (current-filename)))
@@ -46,7 +47,7 @@
     `(("python" ,python)
       ("googletest" ,googletest)
       ("fuse" ,fuse)
-      ("libmhash" ,libmhash)
+      ("openssl" ,openssl)
       ("minizip" ,minizip)))
    (synopsis (synopsis-from-source %source-dir))
    (description (description-from-source %source-dir))

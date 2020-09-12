@@ -34,9 +34,8 @@ before_script:
     libmhash-dev
     libminizip-dev
     zlib1g-dev
+    libssl-dev
     libgtest-dev
-  # patch for mhash, see https://bugs.launchpad.net/ubuntu/+source/mhash/+bug/1465562
-  - sed -i "s/_Bool/bool/" /usr/include/mutils/mutils.h
 
 .build_template: &build
   stage: build
