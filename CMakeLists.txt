@@ -27,8 +27,8 @@ find_library(RT rt)
 
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_search_module(FUSE REQUIRED fuse)
-pkg_search_module(MINIZIP REQUIRED minizip)
+pkg_search_module(FUSE REQUIRED fuse IMPORTED_TARGET)
+pkg_search_module(MINIZIP REQUIRED minizip IMPORTED_TARGET)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -43,14 +43,17 @@ list(REMOVE_ITEM CONCAT_FUSE_SOURCES_CXX src/main.cpp)
 add_library(libconcat-fuse STATIC ${CONCAT_FUSE_SOURCES_CXX})
 set_target_properties(libconcat-fuse PROPERTIES OUTPUT_NAME concat-fuse)
 target_compile_definitions(libconcat-fuse PUBLIC -D__STDC_CONSTANT_MACROS)
-target_compile_options(libconcat-fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNINGS_CXX_FLAGS})
-target_link_libraries(libconcat-fuse PUBLIC ${MINIZIP_LIBRARIES} OpenSSL::Crypto ${CMAKE_THREAD_LIBS_INIT})
-target_include_directories(libconcat-fuse PUBLIC ${MINIZIP_INCLUDE_DIRS})
+target_compile_options(libconcat-fuse PRIVATE  ${WARNINGS_CXX_FLAGS})
+target_include_directories(libconcat-fuse PUBLIC src/)
+target_link_libraries(libconcat-fuse PUBLIC
+  PkgConfig::FUSE
+  PkgConfig::MINIZIP
+  OpenSSL::Crypto
+  Threads::Threads)
 
 add_executable(concat-fuse src/main.cpp)
-target_include_directories(concat-fuse SYSTEM PUBLIC ${FUSE_INCLUDE_DIRS})
-target_link_libraries(concat-fuse libconcat-fuse ${FUSE_LIBRARIES})
-target_compile_options(concat-fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNINGS_CXX_FLAGS})
+target_link_libraries(concat-fuse libconcat-fuse)
+target_compile_options(concat-fuse PRIVATE ${WARNINGS_CXX_FLAGS})
 
 if(BUILD_TESTS)
   find_package(GTest REQUIRED)
@@ -58,11 +61,8 @@ if(BUILD_TESTS)
   file(GLOB TEST_CONCAT_FUSE_SOURCES_CXX RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     tests/*_test.cpp)
   add_executable(test_concat_fuse ${TEST_CONCAT_FUSE_SOURCES_CXX})
-  target_include_directories(test_concat_fuse PUBLIC src/ test/)
   target_link_libraries(test_concat_fuse libconcat-fuse GTest::GTest GTest::Main)
-  target_compile_options(test_concat_fuse PUBLIC ${FUSE_CFLAGS_OTHER} ${WARNINGS_CXX_FLAGS})
-  target_include_directories(test_concat_fuse SYSTEM PUBLIC ${FUSE_INCLUDE_DIRS} ${MHASH_INCLUDE_DIRS})
-  target_link_libraries(test_concat_fuse libconcat-fuse ${FUSE_LIBRARIES} ${MHASH_LIBRARIES})
+  target_compile_options(test_concat_fuse PUBLIC ${WARNINGS_CXX_FLAGS})
 
   # add 'make test' target, use 'make test ARGS="-V"' or 'ctest -V' for verbose
   enable_testing()
