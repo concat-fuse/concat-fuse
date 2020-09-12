@@ -16,6 +16,8 @@
 
 #define FUSE_USE_VERSION 26
 
+#include "concat_fuse.hpp"
+
 #include <algorithm>
 #include <fuse.h>
 #include <map>
@@ -28,6 +30,8 @@
 #include "simple_directory.hpp"
 #include "simple_file.hpp"
 #include "util.hpp"
+
+namespace {
 
 int concat_getattr(const char* path, struct stat* stbuf)
 {
@@ -260,6 +264,8 @@ init_concat_fuse_root()
 
   return root;
 }
+
+} // namespace
 
 int concat_fuse_main(int argc, char** argv)
 {

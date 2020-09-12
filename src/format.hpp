@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdexcept>
 
+[[noreturn]]
 inline void format_arg(std::ostream& os, size_t i)
 {
   throw std::invalid_argument("not enough arguments to format");

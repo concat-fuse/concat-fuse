@@ -43,9 +43,8 @@ public:
   static std::unique_ptr<ZipFileStream> open(const std::string& filename);
   ~ZipFileStream();
 
-  size_t get_size() const;
-
-  ssize_t read(size_t pos, char* buf, size_t count);
+  size_t get_size() const override;
+  ssize_t read(size_t pos, char* buf, size_t count) override;
 
 private:
   ssize_t find_file(size_t& offset) const;

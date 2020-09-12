@@ -28,6 +28,8 @@
 #include "simple_file_list.hpp"
 #include "util.hpp"
 
+namespace {
+
 void
 traverse_simple_directory(SimpleDirectory& directory,
                           std::unordered_map<std::string, Entry*>& m_entries,
@@ -48,6 +50,8 @@ traverse_simple_directory(SimpleDirectory& directory,
     traverse_simple_directory(static_cast<SimpleDirectory&>(*dir.second), m_entries, path, on_change);
   }
 }
+
+} // namespace
 
 ConcatVFS::ConcatVFS() :
   m_mutex(),
