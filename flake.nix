@@ -30,7 +30,7 @@
               pkgs.gtest
               pkgs.minizip
               pkgs.openssl
-              pkgs.python
+              pkgs.python3
               pkgs.zlib
             ];
            };
