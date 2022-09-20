@@ -14,17 +14,22 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-      in rec {
-        packages = flake-utils.lib.flattenTree {
+      in {
+        packages = rec {
+          default = concat-fuse;
+
           concat-fuse = pkgs.stdenv.mkDerivation {
             pname = "concat-fuse";
             version = "0.3.2";
+
             src = nixpkgs.lib.cleanSource ./.;
+
             nativeBuildInputs = [
               pkgs.cmake
               pkgs.pkg-config
-              tinycmmc.defaultPackage.${system}
+              tinycmmc.packages.${system}.default
             ];
+
             buildInputs = [
               pkgs.fuse
               pkgs.gtest
@@ -35,6 +40,6 @@
             ];
            };
         };
-        defaultPackage = packages.concat-fuse;
-      });
+      }
+    );
 }
