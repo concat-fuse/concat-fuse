@@ -2,7 +2,7 @@
   description = "Virtually concatenate files";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-22.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
     flake-utils.url = "github:numtide/flake-utils";
 
     tinycmmc.url = "github:grumbel/tinycmmc";
@@ -22,21 +22,22 @@
             pname = "concat-fuse";
             version = "0.3.2";
 
-            src = nixpkgs.lib.cleanSource ./.;
+            src = ./.;
 
-            nativeBuildInputs = [
-              pkgs.cmake
-              pkgs.pkg-config
+            nativeBuildInputs = with pkgs; [
+              cmake
+              pkg-config
+            ] ++ [
               tinycmmc.packages.${system}.default
             ];
 
-            buildInputs = [
-              pkgs.fuse
-              pkgs.gtest
-              pkgs.minizip
-              pkgs.openssl
-              pkgs.python3
-              pkgs.zlib
+            buildInputs = with pkgs; [
+              fuse
+              gtest
+              minizip
+              openssl
+              python3
+              zlib
             ];
            };
         };
