@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 #include <openssl/sha.h>
+#include <openssl/evp.h>
 
 bool is_hex(char c)
 {
@@ -124,16 +125,24 @@ std::string sha1sum(const std::string& data)
 
 std::string sha1sum(const char* data, size_t len)
 {
-  SHA_CTX ctx;
-  SHA1_Init(&ctx);
-  SHA1_Update(&ctx, data, len);
+  using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
+  EVP_MD_CTX_ptr ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+
+  if (!ctx)
+    throw std::runtime_error("EVP_MD_CTX_new failed");
+
+  if (EVP_DigestInit_ex(ctx.get(), EVP_sha1(), nullptr) != 1 ||
+      EVP_DigestUpdate(ctx.get(), data, len)             != 1)
+    throw std::runtime_error("EVP digest init/update failed");
 
   std::array<uint8_t, SHA_DIGEST_LENGTH> digest;
-  SHA1_Final(digest.data(), &ctx);
+  unsigned int digest_len = 0;
+  if (EVP_DigestFinal_ex(ctx.get(), digest.data(), &digest_len) != 1)
+    throw std::runtime_error("EVP_DigestFinal_ex failed");
 
   std::ostringstream out;
-  for (size_t i = 0; i < digest.size(); ++i)
-    out << std::setfill('0') << std::setw(2) << std::hex << int(digest[i]);
+  for (uint8_t byte : digest)
+    out << std::hex << std::setfill('0') << std::setw(2) << int(byte);
   return out.str();
 }
 
