@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <unzip.h>
+#include <minizip/unzip.h>
 #include <mutex>
 
 #include "stream.hpp"
